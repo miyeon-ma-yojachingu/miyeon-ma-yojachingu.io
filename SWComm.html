@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>水尾潮汐曆｜牽罟與磯釣的潮汐指南</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;500;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --tide-deep:#0F2A33;
+    --tide-blue:#1C4956;
+    --foam:#F5F1E6;
+    --foam-2:#EAE2CE;
+    --sand:#DFC79C;
+    --rope:#9C6B34;
+    --rope-soft:rgba(156,107,52,0.16);
+    --coral:#D9603E;
+    --coral-soft:rgba(217,96,62,0.16);
+    --seagrass:#4B6B4E;
+    --ink:#1B2422;
+    --ink-soft:#4B5754;
+    --line:#D8CBAE;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--foam);
+    color:var(--ink);
+    font-family:'Noto Sans TC',sans-serif;
+    line-height:1.7;
+  }
+  h1,h2,h3{font-family:'Noto Serif TC',serif; margin:0; letter-spacing:.02em;}
+  .mono{font-family:'Roboto Mono',monospace;}
+  a{color:inherit;}
+  img,svg{display:block;}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative;
+    background:radial-gradient(120% 140% at 20% -10%, #1E5566 0%, var(--tide-deep) 55%, #081B21 100%);
+    color:var(--foam);
+    padding:56px 20px 40px;
+    overflow:hidden;
+  }
+  .hero-waves{position:absolute; inset:auto 0 0 0; opacity:.5; pointer-events:none;}
+  .hero-inner{max-width:960px; margin:0 auto; position:relative; z-index:2;}
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'Roboto Mono',monospace; font-size:12px; letter-spacing:.16em;
+    text-transform:uppercase; color:#BFE0DE; opacity:.85; margin-bottom:14px;
+  }
+  .eyebrow::before{content:""; width:18px; height:1px; background:#BFE0DE; display:inline-block;}
+  .hero h1{font-size:clamp(34px,6vw,56px); font-weight:900; line-height:1.15;}
+  .hero h1 em{font-style:normal; color:var(--sand);}
+  .hero p.lede{max-width:56ch; margin-top:16px; font-size:16px; color:#DCEAE8; opacity:.92;}
+
+  .now-card{
+    margin-top:32px;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.16);
+    border-radius:18px;
+    padding:22px 24px;
+    backdrop-filter:blur(6px);
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:16px;
+    align-items:center;
+  }
+  .now-card .label{font-size:12px; letter-spacing:.1em; color:#9FC6C3; font-family:'Roboto Mono',monospace;}
+  .now-card .big{font-size:clamp(22px,3.4vw,30px); font-weight:700; margin-top:4px; font-family:'Noto Serif TC',serif;}
+  .now-card .sub{font-size:13.5px; color:#CFE3E1; margin-top:6px;}
+  .now-pill{
+    justify-self:end;
+    padding:8px 16px; border-radius:999px; font-size:13px; font-weight:700;
+    white-space:nowrap;
+  }
+  .pill-koo{background:var(--rope); color:#fff;}
+  .pill-fish{background:var(--coral); color:#fff;}
+  .pill-wait{background:rgba(255,255,255,0.14); color:#EAF3F2; border:1px solid rgba(255,255,255,0.3);}
+
+  /* ---------- DAY PICKER ---------- */
+  .day-picker-wrap{
+    background:var(--tide-blue);
+    padding:14px 0;
+    position:sticky; top:0; z-index:10;
+    box-shadow:0 4px 14px rgba(0,0,0,.12);
+  }
+  .day-picker{
+    display:flex; gap:8px; overflow-x:auto; padding:0 20px;
+    max-width:960px; margin:0 auto;
+    scrollbar-width:thin;
+  }
+  .day-picker::-webkit-scrollbar{height:5px;}
+  .day-picker::-webkit-scrollbar-thumb{background:rgba(255,255,255,.25); border-radius:4px;}
+  .day-btn{
+    flex:0 0 auto;
+    font-family:'Roboto Mono',monospace;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.16);
+    color:#DCEAE8;
+    border-radius:12px;
+    padding:8px 12px;
+    font-size:12.5px;
+    cursor:pointer;
+    text-align:center;
+    transition:background .15s, transform .15s;
+    line-height:1.4;
+  }
+  .day-btn:hover{background:rgba(255,255,255,.14);}
+  .day-btn.today{border-color:var(--coral);}
+  .day-btn.active{background:var(--sand); color:var(--tide-deep); border-color:var(--sand); font-weight:700;}
+  .day-btn .dot{display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:5px;}
+  .dot-大{background:var(--coral);}
+  .dot-中{background:var(--sand);}
+  .dot-小{background:var(--seagrass);}
+
+  /* ---------- MAIN GRID & SIDEBAR ---------- */
+  main{max-width:960px; margin:0 auto; padding:36px 20px 10px;}
+  
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (max-width: 820px) {
+    .main-grid { grid-template-columns: 1fr; }
+  }
+
+  .sidebar {
+    background: rgba(223, 199, 156, 0.15);
+    border: 1px solid rgba(223, 199, 156, 0.4);
+    border-radius: 18px;
+    padding: 22px 20px;
+    position: sticky;
+    top: 80px;
+  }
+  .sidebar h3 {
+    font-size: 17px;
+    color: var(--rope);
+    margin-bottom: 6px;
+  }
+  .sidebar p {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 0;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .golden-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .golden-item {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+  .golden-item:hover {
+    border-color: var(--sand);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  }
+  .g-date {
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 700;
+    font-size: 14.5px;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+  .g-time {
+    font-size: 13px;
+    color: var(--coral);
+    font-weight: 500;
+  }
+  .g-duration {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-left: 4px;
+    font-weight: 400;
+  }
+
+  /* ---------- CHART SECTION ---------- */
+  .section-head{display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:6px;}
+  .section-head h2{font-size:22px; font-weight:900;}
+  .badge{
+    font-family:'Roboto Mono',monospace; font-size:12px; padding:4px 10px; border-radius:999px;
+    border:1px solid var(--line); color:var(--ink-soft);
+  }
+  .badge.大{background:var(--coral-soft); border-color:transparent; color:#9A3B22;}
+  .badge.中{background:var(--foam-2); color:#7A5A22;}
+  .badge.小{background:rgba(75,107,78,.14); color:var(--seagrass);}
+  .date-caption{font-family:'Roboto Mono',monospace; font-size:12.5px; color:var(--ink-soft); margin-bottom:18px;}
+
+  .chart-card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:18px 14px 8px;
+  }
+  .legend{display:flex; gap:18px; flex-wrap:wrap; padding:2px 10px 14px; font-size:12.5px; color:var(--ink-soft);}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .legend i{width:14px; height:10px; border-radius:3px; display:inline-block;}
+  .leg-koo{background:var(--rope-soft); border:1px solid var(--rope);}
+  .leg-fish{background:var(--coral-soft); border:1px solid var(--coral);}
+  .leg-line{background:var(--tide-blue); height:2px; width:16px; border-radius:2px;}
+
+  .reco-list{list-style:none; margin:18px 0 0; padding:0; display:grid; gap:10px;}
+  .reco-list li{
+    display:flex; gap:12px; align-items:flex-start;
+    background:var(--foam-2); border-radius:12px; padding:12px 14px; font-size:14px;
+  }
+  .reco-tag{
+    flex:0 0 auto; font-family:'Roboto Mono',monospace; font-size:11.5px; font-weight:700;
+    padding:3px 9px; border-radius:999px; color:#fff; margin-top:2px;
+  }
+  .tag-koo{background:var(--rope);}
+  .tag-fish{background:var(--coral);}
+
+  /* ---------- GUIDE CARDS ---------- */
+  .guide{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:44px;}
+  @media (max-width:720px){.guide{grid-template-columns:1fr;}}
+  .g-card{
+    background:#fff; border:1px solid var(--line); border-radius:18px; padding:24px;
+  }
+  .g-card .icon{width:44px; height:44px; margin-bottom:14px;}
+  .g-card h3{font-size:19px; margin-bottom:10px;}
+  .g-card p{font-size:14.5px; color:var(--ink-soft);}
+  .g-card.koo{border-top:4px solid var(--rope);}
+  .g-card.fish{border-top:4px solid var(--coral);}
+
+  /* ---------- ABOUT ---------- */
+  .about{
+    margin-top:44px;
+    background:var(--tide-deep);
+    color:#E7F1EF;
+    border-radius:20px;
+    padding:34px 28px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px;
+    align-items:center;
+  }
+  @media (max-width:720px){.about{grid-template-columns:1fr;}}
+  .about h2{color:#fff; font-size:22px; margin-bottom:12px;}
+  .about p{font-size:14.5px; color:#CFE3E1;}
+  .about .stat-row{display:flex; gap:18px; margin-top:18px; flex-wrap:wrap;}
+  .stat{font-family:'Roboto Mono',monospace;}
+  .stat .num{font-size:26px; font-weight:700; color:var(--sand);}
+  .stat .cap{font-size:11.5px; color:#9FC6C3;}
+
+  footer{
+    max-width:960px; margin:44px auto 0; padding:22px 20px 50px;
+    font-size:12.5px; color:var(--ink-soft); border-top:1px solid var(--line);
+  }
+  footer a{text-decoration:underline; color:var(--tide-blue);}
+  footer p{margin:6px 0;}
+
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <svg class="hero-waves" viewBox="0 0 960 120" preserveAspectRatio="none" width="100%" height="120">
+    <path d="M0,60 C160,110 320,10 480,60 C640,110 800,10 960,60 L960,120 L0,120 Z" fill="#123B46"/>
+    <path d="M0,80 C160,40 320,120 480,80 C640,40 800,120 960,80 L960,120 L0,120 Z" fill="#0B242B"/>
+  </svg>
+  <div class="hero-inner">
+    <div class="eyebrow">苗栗．後龍．水尾社區</div>
+    <h1>討海人的，<em>秘密武器</em>!</h1>
+    <p class="lede">後龍溪出海口的水尾，兩百年來跟著潮水討海。這裡潮差大，看懂今天的潮水曲線，就知道何時該下海牽罟，何時該站上沙灘甩竿。</p>
+
+    <!-- NOW 即時卡片 -->
+    <div class="now-card" id="nowCard">
+      <div>
+        <div class="label">NOW · 即時潮況</div>
+        <div class="big" id="nowBig">讀取中…</div>
+        <div class="sub" id="nowSub"></div>
+      </div>
+      <div class="now-pill pill-wait" id="nowPill">—</div>
+    </div>
+  </div>
+</header>
+
+<nav class="day-picker-wrap">
+  <div class="day-picker" id="dayPicker"></div>
+</nav>
+
+<main>
+  <div class="main-grid">
+    <!-- 左側主圖表區 -->
+    <div>
+      <section id="chartSection">
+        <div class="section-head">
+          <h2 id="chartTitle">今日潮汐曲線</h2>
+          <span class="badge" id="rangeBadge">—</span>
+        </div>
+        <div class="date-caption" id="dateCaption">—</div>
+
+        <div class="chart-card">
+          <svg id="tideChart" viewBox="0 0 800 300" width="100%" height="auto" role="img" aria-label="潮汐曲線圖"></svg>
+          <div class="legend">
+            <span><i class="leg-line"></i> 潮位曲線</span>
+            <span><i class="leg-koo"></i> 建議牽罟時段</span>
+            <span><i class="leg-fish"></i> 建議垂釣時段</span>
+          </div>
+        </div>
+
+        <ul class="reco-list" id="recoList"></ul>
+      </section>
+    </div>
+    
+    <!-- 右側：黃金釣魚日預告側欄 -->
+    <aside class="sidebar" id="goldenSidebar">
+      <h3>🌟 黃金釣魚日預告</h3>
+      <p>目前資料區間內，「流水時段」與「清晨/黃昏」有重疊超過一小時以上的絕佳日子：</p>
+      <div class="golden-list" id="goldenList">
+        <!-- 程式自動產生預告清單 -->
+      </div>
+    </aside>
+  </div>
+
+  <section class="guide">
+    <div class="g-card koo">
+      <svg class="icon" viewBox="0 0 48 48" fill="none">
+        <path d="M6 30c6 8 30 8 36 0" stroke="#9C6B34" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M10 30V16l14-6 14 6v14" stroke="#9C6B34" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="24" cy="16" r="2" fill="#9C6B34"/>
+      </svg>
+      <h3>牽罟，要看退潮的臉色</h3>
+      <p>牽罟是水尾流傳超過兩百年的討海方式：竹筏先把網繩一端固定在沙灘，船隻順著魚群繞出一個半圓下網，再折返岸邊；兩隊人馬合力，把整張網從海裡拔上岸。船要出得去，就得留一點水深；網要拉得動、人要站得穩，沙灘也得先露出來。所以牽罟通常抓在<strong>退潮到乾潮前後</strong>這段時間——水還沒退乾，船能作業，沙灘卻已寬闊到足夠拔河。為考量作業舒適度與安全，本曆建議的牽罟時段已過濾，只顯示落在 <strong>下午 15:00 以後且於日落前結束</strong> 的場次，正式體驗仍以水尾社區與牽罟班公告為準。</p>
+    </div>
+    <div class="g-card fish">
+      <svg class="icon" viewBox="0 0 48 48" fill="none">
+        <path d="M6 24c8-10 28-10 36 0" stroke="#D9603E" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M18 24c4 6 8 6 12 0" stroke="#D9603E" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="24" cy="24" r="3" fill="#D9603E"/>
+      </svg>
+      <h3>魚會跟著流水來</h3>
+      <p>討海人常說「流水才有魚」。滿潮那一刻其實是「憩流」，水幾乎不流動，魚訊反而最差；真正好咬鉤的是<strong>還有流水的階段</strong>——大約漲潮到八分滿，一路到退潮剩七分左右，水持續流動，覓食的魚群會靠著這股流勢靠近岸邊。若能碰上日出前後一小時、或是日落前兩小時的晨昏區間，機會又更好一些。這些都是經驗法則，實際魚況仍受風浪、天氣與季節影響，僅供出發前參考。</p>
+    </div>
+  </section>
+
+  <section class="about">
+    <div>
+      <h2>關於水尾社區</h2>
+      <p>水尾位在後龍溪出海口，是個大約四百人的農漁混合小聚落，居民以長輩居多，卻仍認真守著牽罟文化——社區裡有一座牽罟文化故事館，訴說這項兩百年漁法的故事，也不時號召上百人一起下海，體驗與大海拔河的滋味。海邊撿回來的浮球與漂流木，被長輩們彩繪成裝置藝術，妝點著整片水尾沙灘；退潮時沙灘後方能挖文蛤，傍晚時分，這裡更是後龍人私藏的看夕陽地點。</p>
+      <div class="stat-row">
+        <div class="stat"><div class="num">~400</div><div class="cap">社區居民</div></div>
+        <div class="stat"><div class="num">200+</div><div class="cap">年牽罟歷史</div></div>
+        <div class="stat"><div class="num">2</div><div class="cap">次滿潮／乾潮每日</div></div>
+      </div>
+    </div>
+    <svg viewBox="0 0 300 220" width="100%" height="auto">
+      <path d="M0,150 C60,120 90,180 150,150 C210,120 240,180 300,150 L300,220 L0,220 Z" fill="#173C47"/>
+      <path d="M0,175 C60,155 90,195 150,175 C210,155 240,195 300,175 L300,220 L0,220 Z" fill="#0F2A33"/>
+      <circle cx="230" cy="55" r="26" fill="#DFC79C" opacity=".85"/>
+      <path d="M40,140 L90,110 L140,140 Z" fill="none" stroke="#DFC79C" stroke-width="2"/>
+      <line x1="90" y1="110" x2="90" y2="90" stroke="#DFC79C" stroke-width="2"/>
+    </svg>
+  </section>
+</main>
+
+<footer>
+  <p>潮汐資料來源：交通部中央氣象署「未來30天潮汐預報」（苗栗縣後龍測站，站號 T000506），潮位採「相對海圖」基準。本頁資料涵蓋 2026/07/30–2026/08/18；若查詢日期超出此範圍，請至 <a href="https://www.cwa.gov.tw/V8/C/M/Fishery/tide_30day_MOD/T000506.html" target="_blank" rel="noopener">中央氣象署官網</a> 查詢當時的最新預報。</p>
+  <p>牽罟與垂釣建議時段，是依潮汐漲退的經驗法則推算而成，並非水尾社區的官方活動時刻表；正式體驗行程與報名，請洽水尾社區。</p>
+</footer>
+
+<script>
+/* ---------- 潮汐資料（已移除 7/30 以前之歷史資料） ---------- */
+const DAYS = [
+["2026-07-30","四","06/17","大",[["乾潮","05:49",123],["滿潮","11:21",488],["乾潮","18:17",76]]],
+["2026-07-31","五","06/18","大",[["滿潮","00:10",500],["乾潮","06:22",116],["滿潮","11:54",499],["乾潮","18:48",75]]],
+["2026-08-01","六","06/19","大",[["滿潮","00:36",504],["乾潮","06:52",111],["滿潮","12:26",505],["乾潮","19:13",76]]],
+["2026-08-02","日","06/20","中",[["滿潮","01:01",506],["乾潮","07:21",105],["滿潮","13:00",506],["乾潮","19:36",79]]],
+["2026-08-03","一","06/21","中",[["滿潮","01:29",507],["乾潮","07:51",98],["滿潮","13:38",502],["乾潮","20:05",84]]],
+["2026-08-04","二","06/22","中",[["滿潮","02:01",505],["乾潮","08:27",89],["滿潮","14:22",493],["乾潮","20:42",96]]],
+["2026-08-05","三","06/23","中",[["滿潮","02:41",498],["乾潮","09:09",83],["滿潮","15:16",479],["乾潮","21:28",117]]],
+["2026-08-06","四","06/24","中",[["滿潮","03:29",483],["乾潮","09:57",82],["滿潮","16:18",462],["乾潮","22:26",144]]],
+["2026-08-07","五","06/25","中",[["滿潮","04:30",465],["乾潮","10:54",88],["滿潮","17:30",446],["乾潮","23:39",171]]],
+["2026-08-08","六","06/26","中",[["滿潮","05:43",449],["乾潮","12:03",95],["滿潮","18:53",441]]],
+["2026-08-09","日","06/27","中",[["乾潮","01:05",183],["滿潮","07:01",446],["乾潮","13:33",97],["滿潮","20:18",453]]],
+["2026-08-10","一","06/28","中",[["乾潮","02:28",177],["滿潮","08:13",457],["乾潮","15:00",89],["滿潮","21:28",476]]],
+["2026-08-11","二","06/29","大",[["乾潮","03:41",160],["滿潮","09:16",476],["乾潮","16:12",80],["滿潮","22:25",496]]],
+["2026-08-12","三","06/30","大",[["乾潮","04:43",141],["滿潮","10:12",495],["乾潮","17:14",72],["滿潮","23:11",510]]],
+["2026-08-13","四","07/01","大",[["乾潮","05:35",126],["滿潮","11:00",511],["乾潮","18:05",68],["滿潮","23:50",517]]],
+["2026-08-14","五","07/02","大",[["乾潮","06:20",114],["滿潮","11:44",520],["乾潮","18:46",69]]],
+["2026-08-15","六","07/03","大",[["滿潮","00:25",519],["乾潮","06:57",107],["滿潮","12:25",522],["乾潮","19:20",75]]],
+["2026-08-16","日","07/04","大",[["滿潮","00:58",516],["乾潮","07:30",101],["滿潮","13:06",516],["乾潮","19:50",85]]],
+["2026-08-17","一","07/05","中",[["滿潮","01:32",508],["乾潮","08:02",97],["滿潮","13:50",501],["乾潮","20:21",101]]],
+["2026-08-18","二","07/06","中",[["滿潮","02:10",493],["乾潮","08:38",96],["滿潮","14:39",478],["乾潮","20:56",124]]],
+];
+
+const TZ_OFFSET = "+08:00";
+
+function toTs(dateStr, timeStr){
+  return new Date(`${dateStr}T${timeStr}:00${TZ_OFFSET}`);
+}
+
+const FLAT = [];
+DAYS.forEach(([date,,,,events])=>{
+  events.forEach(([type,time,h])=>{
+    FLAT.push({ts:toTs(date,time), h, type, date, time});
+  });
+});
+FLAT.sort((a,b)=>a.ts-b.ts);
+
+function interpAt(t){
+  for (let i=0;i<FLAT.length-1;i++){
+    if (FLAT[i].ts<=t && FLAT[i+1].ts>=t){
+      const frac = (t-FLAT[i].ts)/(FLAT[i+1].ts-FLAT[i].ts);
+      return FLAT[i].h + (FLAT[i+1].h-FLAT[i].h)*(1-Math.cos(Math.PI*frac))/2;
+    }
+  }
+  return null;
+}
+
+function pad(n){return String(n).padStart(2,"0");}
+function minToLabel(min){
+  min = Math.max(0, Math.min(1439, Math.round(min)));
+  return pad(Math.floor(min/60))+":"+pad(min%60);
+}
+function timeToMin(t){const [h,m]=t.split(":").map(Number); return h*60+m;}
+
+/* ---------- 日出日落推算 ---------- */
+function getSunTimes(dateStr){
+  const d1 = new Date("2026-07-19").getTime();
+  const d2 = new Date("2026-08-18").getTime();
+  const target = new Date(dateStr).getTime();
+  const ratio = Math.max(0, Math.min(1, (target - d1) / (d2 - d1)));
+
+  const srStart = 5*60 + 20; 
+  const ssStart = 18*60 + 45; 
+  const srEnd = 5*60 + 33;   
+  const ssEnd = 18*60 + 28;  
+
+  const sunrise = Math.round(srStart + ratio * (srEnd - srStart));
+  const sunset = Math.round(ssStart + ratio * (ssEnd - ssStart));
+  return { sunrise, sunset };
+}
+
+const FISH_RISE_START = 0.3; // 漲潮五分
+const FISH_RISE_END = 0.8;   // 漲潮九分（進入平潮前）
+const FISH_FALL_START = 0.8; // 退潮剩八分（離開平潮後）
+const FISH_FALL_END = 0.7;   // 退潮剩七分
+
+function getFracTime(startTs, endTs, targetFrac, isFalling) {
+  const duration = endTs - startTs;
+  let f;
+  if (isFalling) {
+    f = Math.acos(2 * targetFrac - 1) / Math.PI;
+  } else {
+    f = Math.acos(1 - 2 * targetFrac) / Math.PI;
+  }
+  return new Date(startTs.getTime() + f * duration);
+}
+
+function fishWindowsForHighTide(ts){
+  const idx = FLAT.findIndex(e=>e.ts.getTime()===ts.getTime());
+  const highEvt = idx>=0 ? FLAT[idx] : {ts};
+  const prevEvt = idx>0 ? FLAT[idx-1] : null;
+  const nextEvt = idx>=0 ? FLAT[idx+1] : null;
+  
+  const windows = [];
+
+  if (prevEvt && prevEvt.type==="乾潮" && prevEvt.h < highEvt.h){
+    const t1 = getFracTime(prevEvt.ts, highEvt.ts, FISH_RISE_START, false);
+    const t2 = getFracTime(prevEvt.ts, highEvt.ts, FISH_RISE_END, false);
+    windows.push({t1, t2, phase: "漲水"});
+  }
+  
+  if (nextEvt && nextEvt.type==="乾潮" && nextEvt.h < highEvt.h){
+    const t1 = getFracTime(highEvt.ts, nextEvt.ts, FISH_FALL_START, true);
+    const t2 = getFracTime(highEvt.ts, nextEvt.ts, FISH_FALL_END, true);
+    windows.push({t1, t2, phase: "退水"});
+  }
+  
+  return windows;
+}
+
+function recoForDay(dayObj){
+  const [date, , , , events] = dayObj;
+  const recos = [];
+  const { sunset } = getSunTimes(date); // 取得當日日落時間
+
+  events.forEach(([type,time,h])=>{
+    if (type==="乾潮"){
+      const m = timeToMin(time);
+      const s = Math.max(0,m-90), e = Math.max(0,m-15);
+      
+      // 🌟 核心過濾規則：牽罟全時段必須落在 15:00 (900分) 之後，且於日落前結束
+      if (s >= 900 && e <= sunset) {
+        recos.push({kind:"koo", start:s, end:e, label:`牽罟建議 ${minToLabel(s)}–${minToLabel(e)}`,
+          note:`退潮尾聲，銜接乾潮 ${time}（${h}cm）：船仍能作業，沙灘也已夠寬`});
+      }
+    } else {
+      const ts = toTs(date, time);
+      const dayStart = toTs(date,"00:00");
+      const windows = fishWindowsForHighTide(ts);
+      
+      windows.forEach(w => {
+        const s = Math.max(0, Math.min(1439, Math.round((w.t1-dayStart)/60000)));
+        const e = Math.max(0, Math.min(1439, Math.round((w.t2-dayStart)/60000)));
+        
+        if (e <= s) return; 
+
+        if (w.phase === "漲水") {
+          recos.push({kind:"fish", start:s, end:e, label:`垂釣建議（漲水） ${minToLabel(s)}–${minToLabel(e)}`,
+            note:`銜接滿潮 ${time}（${h}cm）：漲潮期間水流活絡，魚群隨流靠岸`});
+        } else {
+          recos.push({kind:"fish", start:s, end:e, label:`垂釣建議（退水） ${minToLabel(s)}–${minToLabel(e)}`,
+            note:`銜接滿潮 ${time}（${h}cm）：剛過平潮，開始有水流帶動`});
+        }
+      });
+    }
+  });
+  
+  return recos.sort((a,b) => a.start - b.start);
+}
+
+/* ---------- 畫日期選擇列 ---------- */
+const dayPicker = document.getElementById("dayPicker");
+const todayStr = (()=>{
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+})();
+
+let selectedIdx = DAYS.findIndex(d=>d[0]===todayStr);
+if (selectedIdx === -1) selectedIdx = 0; // 若不在資料範圍內，預設選取陣列第一天
+
+DAYS.forEach((d,i)=>{
+  const [date,wd,lunar,range] = d;
+  const btn = document.createElement("button");
+  btn.className = "day-btn" + (date===todayStr ? " today":"") + (i===selectedIdx ? " active":"");
+  btn.innerHTML = `<span class="dot dot-${range}"></span>${date.slice(5).replace('-','/')} (${wd})`;
+  btn.addEventListener("click", ()=>{ selectedIdx = i; render(); });
+  btn.dataset.idx = i;
+  dayPicker.appendChild(btn);
+});
+
+function selectDay(idx) {
+  selectedIdx = idx;
+  render();
+}
+
+function initGoldenSidebar() {
+  const listContainer = document.getElementById("goldenList");
+  let html = "";
+  
+  DAYS.forEach((dayObj, idx) => {
+    const [date, wd] = dayObj;
+    const { sunrise, sunset } = getSunTimes(date);
+    const recos = recoForDay(dayObj);
+    
+    // 定義晨昏區間
+    const dawnS = sunrise - 60, dawnE = sunrise + 60;
+    const duskS = sunset - 120, duskE = sunset;
+    
+    let overlapNotes = [];
+    
+    recos.forEach(r => {
+      // 必須是釣魚時段
+      if (r.kind === "fish") {
+        
+        // 1. 檢查與「清晨區間」的重疊狀況
+        if (r.start < dawnE && r.end > dawnS) {
+          const overlapS = Math.max(r.start, dawnS);
+          const overlapE = Math.min(r.end, dawnE);
+          const overlapDuration = overlapE - overlapS;
+          
+          if (overlapDuration >= 60) {
+            overlapNotes.push(`晨間 ${minToLabel(overlapS)}–${minToLabel(overlapE)} <span class="g-duration">(${overlapDuration}分)</span>`);
+          }
+        }
+        
+        // 2. 檢查與「傍晚區間」的重疊狀況
+        if (r.start < duskE && r.end > duskS) {
+          const overlapS = Math.max(r.start, duskS);
+          const overlapE = Math.min(r.end, duskE);
+          const overlapDuration = overlapE - overlapS;
+          
+          if (overlapDuration >= 60) {
+            overlapNotes.push(`傍晚 ${minToLabel(overlapS)}–${minToLabel(overlapE)} <span class="g-duration">(${overlapDuration}分)</span>`);
+          }
+        }
+      }
+    });
+
+    if (overlapNotes.length > 0) {
+      const displayDate = date.slice(5).replace('-','/');
+      html += `
+        <div class="golden-item" onclick="selectDay(${idx})" title="點擊查看當日潮汐">
+          <div class="g-date">${displayDate} (${wd})</div>
+          <div class="g-time">${overlapNotes.join("<br>")}</div>
+        </div>
+      `;
+    }
+  });
+
+  if (html === "") {
+    listContainer.innerHTML = `<div style="font-size:13px; color:#888;">目前資料區間內無完美重疊超過一小時的黃金釣魚日。</div>`;
+  } else {
+    listContainer.innerHTML = html;
+  }
+}
+
+initGoldenSidebar();
+
+/* ---------- 畫潮汐曲線 ---------- */
+const svg = document.getElementById("tideChart");
+const W = 800, H = 300, PAD_L = 46, PAD_R = 14, PAD_T = 20, PAD_B = 34;
+
+const allHeights = FLAT.map(e => e.h);
+const globalMinH = Math.min(...allHeights);
+const globalMaxH = Math.max(...allHeights);
+const yPad = (globalMaxH - globalMinH) * 0.15;
+const yLo = globalMinH - yPad;
+const yHi = globalMaxH + yPad;
+
+function render(){
+  [...dayPicker.children].forEach((b,i)=>b.classList.toggle("active", i===selectedIdx));
+  const activeBtn = dayPicker.children[selectedIdx];
+  if (activeBtn) activeBtn.scrollIntoView({inline:"center", block:"nearest", behavior:"smooth"});
+
+  const day = DAYS[selectedIdx];
+  const [date,wd,lunar,range,events] = day;
+
+  const { sunrise, sunset } = getSunTimes(date);
+  
+  document.getElementById("chartTitle").textContent = (date===todayStr?"今日":"") + "潮汐曲線";
+  document.getElementById("rangeBadge").textContent = "潮差：" + range;
+  document.getElementById("rangeBadge").className = "badge " + range;
+  document.getElementById("dateCaption").textContent =
+    `${date.replace(/-/g,'/')}（${wd}） · 農曆 ${lunar} · 站點：後龍(T000506) · 日出 ${minToLabel(sunrise)} / 日落 ${minToLabel(sunset)}`;
+
+  const dayStart = toTs(date,"00:00");
+  const N = 240;
+  const pts = [];
+  for (let i=0;i<=N;i++){
+    const t = new Date(dayStart.getTime() + i*6*60000);
+    pts.push(interpAt(t));
+  }
+
+  const xOf = i => PAD_L + (i/N) * (W-PAD_L-PAD_R);
+  const yOf = h => PAD_T + (1 - (h-yLo)/(yHi-yLo)) * (H-PAD_T-PAD_B);
+
+  let path = "";
+  pts.forEach((h,i)=>{ path += (i===0?"M":"L") + xOf(i).toFixed(1) + "," + yOf(h).toFixed(1) + " "; });
+
+  const recos = recoForDay(day);
+  const bands = recos.map(r=>{
+    const x1 = xOf(r.start/1440*N), x2 = xOf(r.end/1440*N);
+    const cls = r.kind==="koo" ? "var(--rope-soft)" : "var(--coral-soft)";
+    const stroke = r.kind==="koo" ? "var(--rope)" : "var(--coral)";
+    return `<rect x="${x1.toFixed(1)}" y="${PAD_T}" width="${Math.max(2,(x2-x1)).toFixed(1)}" height="${H-PAD_T-PAD_B}" fill="${cls}" stroke="${stroke}" stroke-width="0.5"/>`;
+  }).join("");
+
+  let axis = "";
+  for (let hr=0; hr<=24; hr+=3){
+    const x = xOf(hr/24*N);
+    axis += `<line x1="${x}" y1="${PAD_T}" x2="${x}" y2="${H-PAD_B}" stroke="#EEE7D6" stroke-width="1"/>`;
+    axis += `<text x="${x}" y="${H-PAD_B+18}" font-size="11" fill="#7A8582" text-anchor="middle" font-family="Roboto Mono, monospace">${pad(hr)}:00</text>`;
+  }
+  
+  for (let h = Math.ceil(yLo/100)*100; h <= yHi; h += 100){
+    const y = yOf(h);
+    axis += `<line x1="${PAD_L}" y1="${y}" x2="${W-PAD_R}" y2="${y}" stroke="#E5DCC6" stroke-width="1" stroke-dasharray="4 4"/>`;
+    axis += `<text x="${PAD_L-8}" y="${y+4}" font-size="11" fill="#7A8582" text-anchor="end" font-family="Roboto Mono, monospace">${h}</text>`;
+  }
+
+  let markers = "";
+  events.forEach(([type,time,h])=>{
+    const m = timeToMin(time);
+    const x = xOf(m/1440*N);
+    const y = yOf(h);
+    const color = type==="滿潮" ? "var(--tide-blue)" : "var(--seagrass)";
+    markers += `<circle cx="${x}" cy="${y}" r="4.5" fill="${color}" stroke="#fff" stroke-width="1.5"/>`;
+    const labelY = y < H*0.4 ? y+18 : y-12;
+    markers += `<text x="${x}" y="${labelY}" font-size="11.5" fill="${color}" text-anchor="middle" font-family="Roboto Mono, monospace" font-weight="700">${type} ${time}</text>`;
+    markers += `<text x="${x}" y="${labelY + 13}" font-size="10" fill="#8A948F" text-anchor="middle" font-family="Roboto Mono, monospace">${h}cm</text>`;
+  });
+
+  let nowLine = "";
+  const now = new Date();
+  if (date===todayStr){
+    const nowMin = now.getHours()*60+now.getMinutes();
+    const x = xOf(nowMin/1440*N);
+    nowLine = `<line x1="${x}" y1="${PAD_T-6}" x2="${x}" y2="${H-PAD_B}" stroke="var(--coral)" stroke-width="1.6" stroke-dasharray="4 3"/>
+               <text x="${x}" y="${PAD_T-9}" font-size="10.5" fill="var(--coral)" text-anchor="middle" font-family="Roboto Mono, monospace" font-weight="700">NOW</text>`;
+  }
+
+  svg.innerHTML = `
+    ${axis}
+    ${bands}
+    <path d="${path}" fill="none" stroke="#1C4956" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="${path}" fill="none" stroke="#1C4956" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="0.5 9" opacity="0.55"/>
+    ${markers}
+    ${nowLine}
+  `;
+
+  const recoList = document.getElementById("recoList");
+  recoList.innerHTML = recos.map(r=>`
+    <li>
+      <span class="reco-tag ${r.kind==='koo'?'tag-koo':'tag-fish'}">${r.kind==='koo'?'牽罟':'垂釣'}</span>
+      <span><strong>${r.label}</strong> — ${r.note}</span>
+    </li>
+  `).join("");
+
+  updateNowCard();
+}
+
+function updateNowCard(){
+  const now = new Date();
+  const today = DAYS.find(d=>d[0]===todayStr);
+  const nowBig = document.getElementById("nowBig");
+  const nowSub = document.getElementById("nowSub");
+  const nowPill = document.getElementById("nowPill");
+
+  if (!today){
+    nowBig.textContent = "資料範圍：2026/07/30–08/18";
+    nowSub.textContent = "目前日期不在此範例資料涵蓋範圍內，請至中央氣象署官網查詢當日最新潮汐預報。";
+    nowPill.textContent = "查詢官網";
+    nowPill.className = "now-pill pill-wait";
+    return;
+  }
+
+  const h = interpAt(now);
+  const hSoon = interpAt(new Date(now.getTime()+5*60000));
+  const trend = hSoon > h ? "漲潮中" : "退潮中";
+  nowBig.textContent = `潮位約 ${Math.round(h)} cm · ${trend}`;
+
+  const recos = recoForDay(today);
+  const nowMin = now.getHours()*60+now.getMinutes();
+  const active = recos.find(r=>nowMin>=r.start && nowMin<=r.end);
+
+  if (active){
+    nowSub.textContent = active.note;
+    nowPill.textContent = active.kind==="koo" ? "現在適合牽罟" : "現在適合垂釣";
+    nowPill.className = "now-pill " + (active.kind==="koo" ? "pill-koo":"pill-fish");
+  } else {
+    const upcoming = recos.filter(r=>r.start>nowMin).sort((a,b)=>a.start-b.start)[0];
+    if (upcoming){
+      const wait = upcoming.start - nowMin;
+      nowSub.textContent = `距離下一個${upcoming.kind==="koo"?"牽罟":"垂釣"}建議時段還有約 ${wait} 分鐘（${minToLabel(upcoming.start)} 開始）`;
+    } else {
+      nowSub.textContent = "今天的建議時段都已經過了，明天請早。";
+    }
+    nowPill.textContent = "等待潮水";
+    nowPill.className = "now-pill pill-wait";
+  }
+}
+
+render();
+setInterval(updateNowCard, 60000);
+</script>
+</body>
+</html>

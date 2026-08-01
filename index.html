@@ -431,14 +431,12 @@ async function fetchAndParseTideData() {
           const timeStr = t.DateTime.substring(11, 16); 
           const tideStatus = t.Tide;
 
-          // 抓取潮高 (安全回退各種屬性名稱)
+          // 🌟 修正：精準取值 TideHeights 裡面的數值
           let height = 0;
-          if (t.TideHeights && t.TideHeights.AboveTWVD !== undefined) {
-            height = Number(t.TideHeights.AboveTWVD);
-          } else if (t.AboveTWVD !== undefined) {
-            height = Number(t.AboveTWVD);
-          } else if (t.AboveChartDatum !== undefined) {
-            height = Number(t.AboveChartDatum);
+          if (t.TideHeights) {
+            height = Number(t.TideHeights.AboveTWVD || t.TideHeights.AboveChartDatum || t.TideHeights.AboveLocalMSL || 0);
+          } else {
+            height = Number(t.AboveTWVD || t.AboveChartDatum || t.AboveLocalMSL || 0);
           }
 
           events.push([tideStatus, timeStr, height]);

@@ -305,7 +305,8 @@
         <div class="date-caption" id="dateCaption">—</div>
 
         <div class="chart-card">
-          <svg id="tideChart" viewBox="0 0 800 300" width="100%" height="auto" role="img" aria-label="潮汐曲線圖"></svg>
+          <!-- 修正修正：將原本 height="auto" 改為 height="100%" 解決 SVG attribute 錯誤 -->
+          <svg id="tideChart" viewBox="0 0 800 300" width="100%" height="100%" role="img" aria-label="潮汐曲線圖"></svg>
           <div class="legend">
             <span><i class="leg-line"></i> 潮位曲線</span>
             <span><i class="leg-koo"></i> 建議牽罟時段</span>
@@ -358,7 +359,8 @@
         <div class="stat"><div class="num">2</div><div class="cap">次滿潮／乾潮每日</div></div>
       </div>
     </div>
-    <svg viewBox="0 0 300 220" width="100%" height="auto">
+    <!-- 修正：將原本 height="auto" 改為 height="100%" -->
+    <svg viewBox="0 0 300 220" width="100%" height="100%">
       <path d="M0,150 C60,120 90,180 150,150 C210,120 240,180 300,150 L300,220 L0,220 Z" fill="#173C47"/>
       <path d="M0,175 C60,155 90,195 150,175 C210,155 240,195 300,175 L300,220 L0,220 Z" fill="#0F2A33"/>
       <circle cx="230" cy="55" r="26" fill="#DFC79C" opacity=".85"/>
@@ -382,7 +384,7 @@ let selectedIdx = 0;
 const TZ_OFFSET = "+08:00";
 const API_KEY = "CWA-16D31C9E-3B51-46D7-ACD6-A9CA840DA537";
 const DATASET = "F-A0021-001";
-const API_URL = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/${DATASET}?Authorization=${API_KEY}&LocationName=${encodeURIComponent("苗栗縣")}`;
+const RAW_URL = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/${DATASET}?Authorization=${API_KEY}&LocationName=${encodeURIComponent("苗栗縣")}`;
 
 function pad(n){return String(n).padStart(2,"0");}
 function minToLabel(min){
@@ -395,13 +397,36 @@ function toTs(dateStr, timeStr){
   return new Date(`${dateStr}T${timeStr}:00${TZ_OFFSET}`);
 }
 
-/* ---------- 從 CWA API 抓取與解析潮汐資料 ---------- */
+/* ---------- 從 CWA API 抓取與解析潮汐資料（增加 CORS 防護與代理） ---------- */
 async function fetchAndParseTideData() {
+  let data = null;
+
+  // 嘗試直接連線
   try {
-    const response = await fetch(API_URL);
-    if (!response.ok) throw new Error("HTTP 錯誤碼: " + response.status);
-    
-    const data = await response.json();
+    const response = await fetch(RAW_URL);
+    if (response.ok) {
+      data = await response.json();
+    }
+  } catch (err) {
+    console.warn("直接連線 CWA API 受到 CORS 限制，嘗試使用 Proxy 代理存取...");
+  }
+
+  // 若直接連線失敗（常見於瀏覽器端 CORS 限制），改用 corsproxy.io
+  if (!data) {
+    try {
+      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(RAW_URL)}`;
+      const response = await fetch(proxyUrl);
+      if (response.ok) {
+        data = await response.json();
+      }
+    } catch (err) {
+      console.error("使用 Proxy 代理存取仍然失敗：", err);
+    }
+  }
+
+  if (!data || !data.records || !data.records.location) return false;
+
+  try {
     const locations = data.records.location;
     if (!locations || locations.length === 0) return false;
 
@@ -421,7 +446,7 @@ async function fetchAndParseTideData() {
           const dataTime = t.dataTime;
           if (!dataTime) return;
 
-          const dateObj = new Date(dataTime);
+          const dateObj = new Date(dataTime.replace(/-/g, "/")); // 增強 Date 相容性
           const dateStr = `${dateObj.getFullYear()}-${pad(dateObj.getMonth()+1)}-${pad(dateObj.getDate())}`;
           const timeStr = `${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}`;
 
@@ -472,7 +497,7 @@ async function fetchAndParseTideData() {
 
     return true;
   } catch (err) {
-    console.error("即時資料擷取失敗：", err);
+    console.error("資料剖析失敗：", err);
     return false;
   }
 }
@@ -491,7 +516,7 @@ function interpAt(t){
 function getSunTimes(dateStr){
   const d1 = new Date("2026-07-19").getTime();
   const d2 = new Date("2026-08-18").getTime();
-  const target = new Date(dateStr).getTime();
+  const target = new Date(dateStr.replace(/-/g, "/")).getTime();
   const ratio = Math.max(0, Math.min(1, (target - d1) / (d2 - d1)));
 
   const srStart = 5*60 + 20; 

@@ -116,6 +116,29 @@
   .dot-中{background:var(--sand);}
   .dot-小{background:var(--seagrass);}
 
+  /* ---------- DATA STATUS BAR ---------- */
+  .data-status-bar{
+    max-width:960px; margin:0 auto;
+    padding:10px 20px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    flex-wrap:wrap;
+    font-family:'Roboto Mono',monospace;
+    font-size:12.5px;
+  }
+  .data-status-bar .status-text{flex:1 1 auto; min-width:0;}
+  .status-loading .status-text{color:var(--ink-soft);}
+  .status-live .status-text{color:var(--seagrass); font-weight:700;}
+  .status-offline .status-text{color:#9A3B22; font-weight:700;}
+  .refresh-btn{
+    flex:0 0 auto;
+    font-family:'Roboto Mono',monospace;
+    background:#fff; border:1px solid var(--line); color:var(--ink);
+    border-radius:10px; padding:6px 12px; font-size:12px; cursor:pointer;
+    transition:background .15s, transform .15s;
+  }
+  .refresh-btn:hover{background:var(--foam-2);}
+  .refresh-btn:disabled{opacity:.55; cursor:wait;}
+
   /* ---------- MAIN GRID & SIDEBAR ---------- */
   main{max-width:960px; margin:0 auto; padding:36px 20px 10px;}
   
@@ -293,6 +316,11 @@
   <div class="day-picker" id="dayPicker"></div>
 </nav>
 
+<div class="data-status-bar status-loading" id="dataStatusBar">
+  <span class="status-text" id="dataStatusText">正在讀取即時潮汐資料…</span>
+  <button class="refresh-btn" id="refreshBtn" onclick="refreshTideData()">🔄 重新整理</button>
+</div>
+
 <main>
   <div class="main-grid">
     <!-- 左側主圖表區 -->
@@ -369,13 +397,13 @@
 </main>
 
 <footer>
-  <p>潮汐資料來源：交通部中央氣象署「未來30天潮汐預報」（苗栗縣後龍測站，站號 T000506），潮位採「相對海圖」基準。本頁資料涵蓋 2026/07/30–2026/08/18；若查詢日期超出此範圍，請至 <a href="https://www.cwa.gov.tw/V8/C/M/Fishery/tide_30day_MOD/T000506.html" target="_blank" rel="noopener">中央氣象署官網</a> 查詢當時的最新預報。</p>
+  <p>潮汐資料預設即時抓取自中央氣象署開放資料平台「未來1個月潮汐預報」（F-A0021-001，苗栗縣後龍鎮），潮位採「相對海圖」基準。若即時抓取失敗，網頁會自動切換為內建的離線備援資料（涵蓋 2026/07/30–2026/08/18），並於上方狀態列標示「離線資料」；請隨時至 <a href="https://www.cwa.gov.tw/V8/C/M/Fishery/tide_30day_MOD/T000506.html" target="_blank" rel="noopener">中央氣象署官網</a> 查詢當時的最新預報以為準。</p>
   <p>牽罟與垂釣建議時段，是依潮汐漲退的經驗法則推算而成，並非水尾社區的官方活動時刻表；正式體驗行程與報名，請洽水尾社區。</p>
 </footer>
 
 <script>
-/* ---------- 潮汐資料（已移除 7/30 以前之歷史資料） ---------- */
-const DAYS = [
+/* ---------- 內建離線備援資料（僅在即時抓取失敗時使用） ---------- */
+const STATIC_DAYS = [
 ["2026-07-30","四","06/17","大",[["乾潮","05:49",123],["滿潮","11:21",488],["乾潮","18:17",76]]],
 ["2026-07-31","五","06/18","大",[["滿潮","00:10",500],["乾潮","06:22",116],["滿潮","11:54",499],["乾潮","18:48",75]]],
 ["2026-08-01","六","06/19","大",[["滿潮","00:36",504],["乾潮","06:52",111],["滿潮","12:26",505],["乾潮","19:13",76]]],
@@ -404,13 +432,116 @@ function toTs(dateStr, timeStr){
   return new Date(`${dateStr}T${timeStr}:00${TZ_OFFSET}`);
 }
 
-const FLAT = [];
-DAYS.forEach(([date,,,,events])=>{
-  events.forEach(([type,time,h])=>{
-    FLAT.push({ts:toTs(date,time), h, type, date, time});
-  });
-});
-FLAT.sort((a,b)=>a.ts-b.ts);
+/* ---------- 目前使用中的資料（預設先以內建資料開頁，抓取成功後會被取代） ---------- */
+let DAYS = STATIC_DAYS;
+let FLAT = [];
+
+/* =========================================================
+   即時資料整合：中央氣象署開放資料平台
+   資料集：F-A0021-001（未來1個月潮汐預報）
+   地點：苗栗縣後龍鎮（涵蓋水尾所在的後龍溪出海口）
+   ========================================================= */
+const CWA_API_KEY = "CWA-16D31C9E-3B51-46D7-ACD6-A9CA840DA537";
+const CWA_DATASET = "F-A0021-001";
+const CWA_LOCATION_NAME = "苗栗縣後龍鎮";
+const CWA_URL = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/${CWA_DATASET}` +
+  `?Authorization=${CWA_API_KEY}&LocationName=${encodeURIComponent(CWA_LOCATION_NAME)}&format=JSON`;
+
+// 從巢狀的 weatherElement 陣列中，依 elementName 找出對應項目
+function findElement(list, name){
+  return Array.isArray(list) ? list.find(e => e.elementName === name) : undefined;
+}
+
+// 將 CWA API 回傳的 JSON 轉換成與 STATIC_DAYS 相同格式：
+// [date, weekday, lunar, range, [[type,"HH:MM",height], ...]]
+function parseCwaTideResponse(data){
+  const loc = data?.records?.location?.[0];
+  if (!loc || !Array.isArray(loc.time) || loc.time.length === 0){
+    throw new Error("回傳資料中找不到後龍鎮的潮汐紀錄");
+  }
+
+  const weekdayLabels = ["日","一","二","三","四","五","六"];
+
+  const days = loc.time.map(dayEntry => {
+    const date = (dayEntry.validTime?.startTime || "").slice(0, 10);
+    const dayElements = dayEntry.weatherElement || [];
+
+    const lunar = findElement(dayElements, "農曆")?.value || "";
+    const range = findElement(dayElements, "潮差")?.value || "中";
+    const tideBlock = findElement(dayElements, "1日潮汐");
+
+    const events = [];
+    (tideBlock?.time || []).forEach(evt => {
+      const evtElements = evt.weatherElement || [];
+      const type = findElement(evtElements, "潮汐")?.value; // "乾潮" 或 "滿潮"
+      const timeVal = findElement(evtElements, "時間")?.value; // ISO 時間字串
+      const heightVal = findElement(evtElements, "潮高(相對海圖)")?.elementValue?.value;
+      if (type && timeVal){
+        const hhmm = timeVal.slice(11, 16);
+        const h = heightVal != null ? Math.round(Number(heightVal)) : 0;
+        events.push([type, hhmm, h]);
+      }
+    });
+
+    const wd = date ? weekdayLabels[new Date(`${date}T00:00:00${TZ_OFFSET}`).getDay()] : "";
+    return [date, wd, lunar, range, events];
+  }).filter(d => d[0] && d[4].length > 0);
+
+  if (days.length === 0){
+    throw new Error("解析後沒有任何有效的潮汐事件");
+  }
+  return days;
+}
+
+async function fetchLiveTideDays(){
+  const res = await fetch(CWA_URL);
+  if (!res.ok){
+    throw new Error("HTTP 錯誤碼 " + res.status);
+  }
+  const data = await res.json();
+  return parseCwaTideResponse(data);
+}
+
+function setDataStatus(state, extra){
+  const bar = document.getElementById("dataStatusBar");
+  const text = document.getElementById("dataStatusText");
+  const btn = document.getElementById("refreshBtn");
+  const now = new Date();
+  const stamp = pad(now.getHours()) + ":" + pad(now.getMinutes());
+
+  if (state === "loading"){
+    bar.className = "data-status-bar status-loading";
+    text.textContent = (extra === "manual" ? "正在重新抓取即時潮汐資料…" : "正在讀取即時潮汐資料…");
+    btn.disabled = true;
+  } else if (state === "live"){
+    bar.className = "data-status-bar status-live";
+    text.textContent = `✅ 即時資料（中央氣象署）· 更新於 ${stamp}`;
+    btn.disabled = false;
+  } else {
+    bar.className = "data-status-bar status-offline";
+    text.textContent = `⚠️ 即時資料抓取失敗，已切換為內建離線資料（涵蓋 2026/07/30–08/18）${extra ? "・" + extra : ""} · ${stamp}`;
+    btn.disabled = false;
+  }
+}
+
+async function loadTideData(isManual){
+  setDataStatus("loading", isManual ? "manual" : "auto");
+  try {
+    const liveDays = await fetchLiveTideDays();
+    DAYS = liveDays;
+    mountApp();
+    setDataStatus("live");
+  } catch (err){
+    console.error("即時潮汐資料抓取失敗：", err);
+    DAYS = STATIC_DAYS;
+    mountApp();
+    setDataStatus("offline", err.message);
+  }
+}
+
+function refreshTideData(){
+  loadTideData(true);
+}
 
 function interpAt(t){
   for (let i=0;i<FLAT.length-1;i++){
@@ -527,23 +658,29 @@ function recoForDay(dayObj){
 
 /* ---------- 畫日期選擇列 ---------- */
 const dayPicker = document.getElementById("dayPicker");
-const todayStr = (()=>{
-  const d = new Date();
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-})();
+let todayStr = "";
+let selectedIdx = 0;
 
-let selectedIdx = DAYS.findIndex(d=>d[0]===todayStr);
-if (selectedIdx === -1) selectedIdx = 0; // 若不在資料範圍內，預設選取陣列第一天
+function buildDayPicker(){
+  todayStr = (()=>{
+    const d = new Date();
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  })();
 
-DAYS.forEach((d,i)=>{
-  const [date,wd,lunar,range] = d;
-  const btn = document.createElement("button");
-  btn.className = "day-btn" + (date===todayStr ? " today":"") + (i===selectedIdx ? " active":"");
-  btn.innerHTML = `<span class="dot dot-${range}"></span>${date.slice(5).replace('-','/')} (${wd})`;
-  btn.addEventListener("click", ()=>{ selectedIdx = i; render(); });
-  btn.dataset.idx = i;
-  dayPicker.appendChild(btn);
-});
+  selectedIdx = DAYS.findIndex(d=>d[0]===todayStr);
+  if (selectedIdx === -1) selectedIdx = 0; // 若不在資料範圍內，預設選取陣列第一天
+
+  dayPicker.innerHTML = "";
+  DAYS.forEach((d,i)=>{
+    const [date,wd,lunar,range] = d;
+    const btn = document.createElement("button");
+    btn.className = "day-btn" + (date===todayStr ? " today":"") + (i===selectedIdx ? " active":"");
+    btn.innerHTML = `<span class="dot dot-${range}"></span>${date.slice(5).replace('-','/')} (${wd})`;
+    btn.addEventListener("click", ()=>{ selectedIdx = i; render(); });
+    btn.dataset.idx = i;
+    dayPicker.appendChild(btn);
+  });
+}
 
 function selectDay(idx) {
   selectedIdx = idx;
@@ -611,18 +748,28 @@ function initGoldenSidebar() {
   }
 }
 
-initGoldenSidebar();
-
 /* ---------- 畫潮汐曲線 ---------- */
 const svg = document.getElementById("tideChart");
 const W = 800, H = 300, PAD_L = 46, PAD_R = 14, PAD_T = 20, PAD_B = 34;
 
-const allHeights = FLAT.map(e => e.h);
-const globalMinH = Math.min(...allHeights);
-const globalMaxH = Math.max(...allHeights);
-const yPad = (globalMaxH - globalMinH) * 0.15;
-const yLo = globalMinH - yPad;
-const yHi = globalMaxH + yPad;
+let globalMinH, globalMaxH, yLo, yHi;
+
+function computeFlatAndBounds(){
+  FLAT = [];
+  DAYS.forEach(([date,,,,events])=>{
+    events.forEach(([type,time,h])=>{
+      FLAT.push({ts:toTs(date,time), h, type, date, time});
+    });
+  });
+  FLAT.sort((a,b)=>a.ts-b.ts);
+
+  const allHeights = FLAT.map(e => e.h);
+  globalMinH = Math.min(...allHeights);
+  globalMaxH = Math.max(...allHeights);
+  const yPad = (globalMaxH - globalMinH) * 0.15;
+  yLo = globalMinH - yPad;
+  yHi = globalMaxH + yPad;
+}
 
 function render(){
   [...dayPicker.children].forEach((b,i)=>b.classList.toggle("active", i===selectedIdx));
@@ -724,8 +871,9 @@ function updateNowCard(){
   const nowPill = document.getElementById("nowPill");
 
   if (!today){
-    nowBig.textContent = "資料範圍：2026/07/30–08/18";
-    nowSub.textContent = "目前日期不在此範例資料涵蓋範圍內，請至中央氣象署官網查詢當日最新潮汐預報。";
+    const first = DAYS[0]?.[0], last = DAYS[DAYS.length-1]?.[0];
+    nowBig.textContent = first && last ? `資料範圍：${first}–${last}` : "資料範圍外";
+    nowSub.textContent = "目前日期不在目前資料涵蓋範圍內，請點擊上方「重新整理」，或至中央氣象署官網查詢當日最新潮汐預報。";
     nowPill.textContent = "查詢官網";
     nowPill.className = "now-pill pill-wait";
     return;
@@ -757,7 +905,19 @@ function updateNowCard(){
   }
 }
 
-render();
+function mountApp(){
+  computeFlatAndBounds();
+  buildDayPicker();
+  initGoldenSidebar();
+  render();
+}
+
+/* ---------- 啟動流程 ---------- */
+// 1) 先用內建離線資料立即繪出畫面，避免抓取期間頁面空白
+mountApp();
+// 2) 接著嘗試向中央氣象署即時抓取，成功則覆蓋畫面；失敗則維持離線資料並標示狀態
+loadTideData(false);
+
 setInterval(updateNowCard, 60000);
 </script>
 </body>

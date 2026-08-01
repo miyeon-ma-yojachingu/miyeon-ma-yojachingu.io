@@ -331,7 +331,7 @@
         <circle cx="24" cy="16" r="2" fill="#9C6B34"/>
       </svg>
       <h3>牽罟，要看退潮的臉色</h3>
-      <p>牽罟是水尾流傳超過兩百年的討海方式：竹筏先把網繩一端固定在沙灘，船隻順著魚群繞出一個半圓下網，再折返岸邊；兩隊人馬合力，把整張網從海裡拔上岸。船要出得去，就得留一點水深；網要拉得動、人要站得穩，沙灘也得先露出來。所以牽罟通常抓在<strong>退潮到乾潮前後</strong>這段時間——水還沒退乾，船能作業，沙灘卻已寬闊到足夠拔河。為考量作業舒適度與安全，本曆建議的牽罟時段已過濾，只顯示落在 <strong>下午 15:00 以後且於日落前結束</strong> 的場次，正式體驗仍以水尾社區與牽罟班公告為準。</p>
+      <p>牽罟是水尾流傳超過兩百年的討海方式：竹筏先把網繩一端固定在沙灘，船隻順著魚群繞出一個半圓下網，再折返岸邊；兩隊人馬合力，把整張網從海裡拔上岸。船要出得去，就得留一點水深；網要拉得動、人要站得穩，沙灘也得先露出來。所以牽罟通常抓在<strong>退潮到乾潮前後</strong>這段時間——水還沒退乾，船能作業，沙灘卻已寬闊到足夠拔河。本曆建議牽罟時段為下午 14:00 至 18:00 間出現乾潮的日子，取乾潮前兩小時為最佳時機，正式體驗仍以水尾社區與牽罟班公告為準。</p>
     </div>
     <div class="g-card fish">
       <svg class="icon" viewBox="0 0 48 48" fill="none">
@@ -405,7 +405,6 @@ async function fetchAndParseTideData() {
     const locationObj = forecastList[0].Location;
     const dailyList = locationObj.TimePeriods.Daily;
 
-    // 按日期排序
     dailyList.sort((a, b) => new Date(a.Date) - new Date(b.Date));
 
     const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
@@ -427,11 +426,9 @@ async function fetchAndParseTideData() {
       if (day.Time && day.Time.length > 0) {
         day.Time.forEach(t => {
           if (!t.DateTime) return;
-          // "2026-08-01T00:36:00+08:00" -> 擷取 "00:36"
           const timeStr = t.DateTime.substring(11, 16); 
           const tideStatus = t.Tide;
 
-          // 🌟 修正：精準取值 TideHeights 裡面的數值
           let height = 0;
           if (t.TideHeights) {
             height = Number(t.TideHeights.AboveTWVD || t.TideHeights.AboveChartDatum || t.TideHeights.AboveLocalMSL || 0);
@@ -446,7 +443,6 @@ async function fetchAndParseTideData() {
       return [dateStr, wd, lunarStr, rangeType, events];
     });
 
-    // 展平為時間軸 FLAT
     FLAT = [];
     DAYS.forEach(([date,,,,events])=>{
       events.forEach(([type,time,h])=>{
@@ -454,6 +450,18 @@ async function fetchAndParseTideData() {
       });
     });
     FLAT.sort((a,b)=>a.ts-b.ts);
+
+    // 🌟 關鍵修正：解決曲線畫不出來的問題
+    // 原本如果查詢的當天 00:00 前沒有資料點，interpAt 會回傳 null 導致整條線斷掉
+    // 這裡我們強制在時間軸最前端與最尾端補上「極值點」，確保內插函數有足夠的區間計算
+    if (FLAT.length > 0) {
+      const firstTs = FLAT[0].ts;
+      const lastTs = FLAT[FLAT.length-1].ts;
+      // 往前補 24 小時的點（借用第一個點的高度與類型）
+      FLAT.unshift({ts: new Date(firstTs.getTime() - 24*3600*1000), h: FLAT[0].h, type: FLAT[0].type});
+      // 往後補 24 小時的點
+      FLAT.push({ts: new Date(lastTs.getTime() + 24*3600*1000), h: FLAT[FLAT.length-1].h, type: FLAT[FLAT.length-1].type});
+    }
 
     return true;
   } catch (err) {
@@ -463,6 +471,8 @@ async function fetchAndParseTideData() {
 }
 
 function interpAt(t){
+  if (FLAT.length === 0) return null;
+  
   for (let i=0;i<FLAT.length-1;i++){
     if (FLAT[i].ts<=t && FLAT[i+1].ts>=t){
       const frac = (t-FLAT[i].ts)/(FLAT[i+1].ts-FLAT[i].ts);
@@ -489,10 +499,10 @@ function getSunTimes(dateStr){
   return { sunrise, sunset };
 }
 
-const FISH_RISE_START = 0.3; // 漲潮五分
-const FISH_RISE_END = 0.8;   // 漲潮九分
-const FISH_FALL_START = 0.8; // 退潮剩八分
-const FISH_FALL_END = 0.7;   // 退潮剩七分
+const FISH_RISE_START = 0.3; 
+const FISH_RISE_END = 0.8;   
+const FISH_FALL_START = 0.8; 
+const FISH_FALL_END = 0.7;   
 
 function getFracTime(startTs, endTs, targetFrac, isFalling) {
   const duration = endTs - startTs;
@@ -506,7 +516,7 @@ function getFracTime(startTs, endTs, targetFrac, isFalling) {
 }
 
 function fishWindowsForHighTide(ts){
-  const idx = FLAT.findIndex(e=>e.ts.getTime()===ts.getTime());
+  const idx = FLAT.findIndex(e=>e.ts && e.ts.getTime()===ts.getTime());
   const highEvt = idx>=0 ? FLAT[idx] : {ts};
   const prevEvt = idx>0 ? FLAT[idx-1] : null;
   const nextEvt = idx>=0 ? FLAT[idx+1] : null;
@@ -531,18 +541,19 @@ function fishWindowsForHighTide(ts){
 function recoForDay(dayObj){
   const [date, , , , events] = dayObj;
   const recos = [];
-  const { sunset } = getSunTimes(date);
 
   events.forEach(([type,time,h])=>{
     if (type==="乾潮"){
       const m = timeToMin(time);
-      const s = Math.max(0,m-90), e = Math.max(0,m-15);
       
-      if (s >= 900 && e <= sunset) {
+      // 🌟 新增牽罟判斷機制：乾潮時間落在 14:00 (840分) ~ 18:00 (1080分) 之間
+      if (m >= 840 && m <= 1080) {
+        const s = Math.max(0, m - 120); // 乾潮前兩小時為開始
+        const e = m;                    // 乾潮當下為結束
         recos.push({kind:"koo", start:s, end:e, label:`牽罟建議 ${minToLabel(s)}–${minToLabel(e)}`,
-          note:`退潮尾聲，銜接乾潮 ${time}（${h}cm）：船仍能作業，沙灘也已夠寬`});
+          note:`乾潮前兩小時為最佳時機，銜接乾潮 ${time}（${h}cm）`});
       }
-    } else {
+    } else if (type==="滿潮") {
       const ts = toTs(date, time);
       const dayStart = toTs(date,"00:00");
       const windows = fishWindowsForHighTide(ts);
@@ -685,8 +696,8 @@ function render(){
   }
 
   const allHeights = FLAT.map(e => e.h);
-  const globalMinH = FLAT.length > 0 ? Math.min(...allHeights) : 0;
-  const globalMaxH = FLAT.length > 0 ? Math.max(...allHeights) : 500;
+  const globalMinH = FLAT.length > 0 ? Math.min(...allHeights) : -200;
+  const globalMaxH = FLAT.length > 0 ? Math.max(...allHeights) : 300;
   const yPad = (globalMaxH - globalMinH) * 0.15 || 50;
   const yLo = globalMinH - yPad;
   const yHi = globalMaxH + yPad;
@@ -694,10 +705,13 @@ function render(){
   const xOf = i => PAD_L + (i/N) * (W-PAD_L-PAD_R);
   const yOf = h => PAD_T + (1 - (h-yLo)/(yHi-yLo)) * (H-PAD_T-PAD_B);
 
+  // 🌟 關鍵修正：確保 SVG Path 在遇到 null 時不會斷線
   let path = "";
+  let isFirstPoint = true;
   pts.forEach((h,i)=>{ 
-    if (h !== null) {
-      path += (i===0?"M":"L") + xOf(i).toFixed(1) + "," + yOf(h).toFixed(1) + " "; 
+    if (h !== null && !isNaN(h)) {
+      path += (isFirstPoint ? "M" : "L") + xOf(i).toFixed(1) + "," + yOf(h).toFixed(1) + " "; 
+      isFirstPoint = false;
     }
   });
 

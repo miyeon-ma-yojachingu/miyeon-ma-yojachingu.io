@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>水尾潮汐曆｜牽罟與磯釣的潮汐指南</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;500;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --tide-deep:#0F2A33;
@@ -32,7 +32,6 @@
     line-height:1.7;
   }
   h1,h2,h3{font-family:'Noto Serif TC',serif; margin:0; letter-spacing:.02em;}
-  .mono{font-family:'Roboto Mono',monospace;}
   a{color:inherit;}
   img,svg{display:block;}
 
@@ -48,7 +47,7 @@
   .hero-inner{max-width:960px; margin:0 auto; position:relative; z-index:2;}
   .eyebrow{
     display:inline-flex; align-items:center; gap:8px;
-    font-family:'Roboto Mono',monospace; font-size:12px; letter-spacing:.16em;
+    font-size:12px; letter-spacing:.16em;
     text-transform:uppercase; color:#BFE0DE; opacity:.85; margin-bottom:14px;
   }
   .eyebrow::before{content:""; width:18px; height:1px; background:#BFE0DE; display:inline-block;}
@@ -68,7 +67,7 @@
     gap:16px;
     align-items:center;
   }
-  .now-card .label{font-size:12px; letter-spacing:.1em; color:#9FC6C3; font-family:'Roboto Mono',monospace;}
+  .now-card .label{font-size:12px; letter-spacing:.1em; color:#9FC6C3;}
   .now-card .big{font-size:clamp(22px,3.4vw,30px); font-weight:700; margin-top:4px; font-family:'Noto Serif TC',serif;}
   .now-card .sub{font-size:13.5px; color:#CFE3E1; margin-top:6px;}
   .now-pill{
@@ -96,7 +95,6 @@
   .day-picker::-webkit-scrollbar-thumb{background:rgba(255,255,255,.25); border-radius:4px;}
   .day-btn{
     flex:0 0 auto;
-    font-family:'Roboto Mono',monospace;
     background:rgba(255,255,255,.06);
     border:1px solid rgba(255,255,255,.16);
     color:#DCEAE8;
@@ -168,7 +166,6 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.06);
   }
   .g-date {
-    font-family: 'Roboto Mono', monospace;
     font-weight: 700;
     font-size: 14.5px;
     color: var(--ink);
@@ -190,13 +187,13 @@
   .section-head{display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:6px;}
   .section-head h2{font-size:22px; font-weight:900;}
   .badge{
-    font-family:'Roboto Mono',monospace; font-size:12px; padding:4px 10px; border-radius:999px;
+    font-size:12px; padding:4px 10px; border-radius:999px;
     border:1px solid var(--line); color:var(--ink-soft);
   }
   .badge.大{background:var(--coral-soft); border-color:transparent; color:#9A3B22;}
   .badge.中{background:var(--foam-2); color:#7A5A22;}
   .badge.小{background:rgba(75,107,78,.14); color:var(--seagrass);}
-  .date-caption{font-family:'Roboto Mono',monospace; font-size:12.5px; color:var(--ink-soft); margin-bottom:18px;}
+  .date-caption{font-size:12.5px; color:var(--ink-soft); margin-bottom:18px;}
 
   .chart-card{
     background:#fff;
@@ -217,7 +214,7 @@
     background:var(--foam-2); border-radius:12px; padding:12px 14px; font-size:14px;
   }
   .reco-tag{
-    flex:0 0 auto; font-family:'Roboto Mono',monospace; font-size:11.5px; font-weight:700;
+    flex:0 0 auto; font-size:11.5px; font-weight:700;
     padding:3px 9px; border-radius:999px; color:#fff; margin-top:2px;
   }
   .tag-koo{background:var(--rope);}
@@ -251,7 +248,6 @@
   .about h2{color:#fff; font-size:22px; margin-bottom:12px;}
   .about p{font-size:14.5px; color:#CFE3E1;}
   .about .stat-row{display:flex; gap:18px; margin-top:18px; flex-wrap:wrap;}
-  .stat{font-family:'Roboto Mono',monospace;}
   .stat .num{font-size:26px; font-weight:700; color:var(--sand);}
   .stat .cap{font-size:11.5px; color:#9FC6C3;}
 
@@ -305,7 +301,7 @@
         <div class="date-caption" id="dateCaption">—</div>
 
         <div class="chart-card">
-          <!-- 修正修正：將原本 height="auto" 改為 height="100%" 解決 SVG attribute 錯誤 -->
+          <!-- 修正 SVG 高度屬性為 100% -->
           <svg id="tideChart" viewBox="0 0 800 300" width="100%" height="100%" role="img" aria-label="潮汐曲線圖"></svg>
           <div class="legend">
             <span><i class="leg-line"></i> 潮位曲線</span>
@@ -359,7 +355,6 @@
         <div class="stat"><div class="num">2</div><div class="cap">次滿潮／乾潮每日</div></div>
       </div>
     </div>
-    <!-- 修正：將原本 height="auto" 改為 height="100%" -->
     <svg viewBox="0 0 300 220" width="100%" height="100%">
       <path d="M0,150 C60,120 90,180 150,150 C210,120 240,180 300,150 L300,220 L0,220 Z" fill="#173C47"/>
       <path d="M0,175 C60,155 90,195 150,175 C210,155 240,195 300,175 L300,220 L0,220 Z" fill="#0F2A33"/>
@@ -371,7 +366,7 @@
 </main>
 
 <footer>
-  <p>潮汐資料來源：交通部中央氣象署「未來30天潮汐預報」（苗栗縣後龍/水尾測站，站號 T000506，經由 OpenAPI 即時擷取）。若查詢過程有延遲，亦可至 <a href="https://www.cwa.gov.tw/V8/C/M/Fishery/tide_30day_MOD/T000506.html" target="_blank" rel="noopener">中央氣象署官網</a> 查詢當時的最新預報。</p>
+  <p>潮汐資料來源：交通部中央氣象署「未來30天潮汐預報」（苗栗縣後龍鎮測站，站號 10005060，經由 OpenAPI 即時擷取）。若查詢過程有延遲，亦可至 <a href="https://www.cwa.gov.tw/V8/C/M/Fishery/tide_30day_MOD/T000506.html" target="_blank" rel="noopener">中央氣象署官網</a> 查詢當時的最新預報。</p>
   <p>牽罟與垂釣建議時段，是依潮汐漲退的經驗法則推算而成，並非水尾社區的官方活動時刻表；正式體驗行程與報名，請洽水尾社區。</p>
 </footer>
 
@@ -384,7 +379,8 @@ let selectedIdx = 0;
 const TZ_OFFSET = "+08:00";
 const API_KEY = "CWA-16D31C9E-3B51-46D7-ACD6-A9CA840DA537";
 const DATASET = "F-A0021-001";
-const RAW_URL = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/${DATASET}?Authorization=${API_KEY}&LocationName=${encodeURIComponent("苗栗縣")}`;
+// 去除 hhmmss 參數，確保能拿到帶有時間與高度的詳細點資料
+const API_URL = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/${DATASET}?Authorization=${API_KEY}&format=JSON&LocationName=${encodeURIComponent("苗栗縣後龍鎮")}`;
 
 function pad(n){return String(n).padStart(2,"0");}
 function minToLabel(min){
@@ -397,96 +393,65 @@ function toTs(dateStr, timeStr){
   return new Date(`${dateStr}T${timeStr}:00${TZ_OFFSET}`);
 }
 
-/* ---------- 從 CWA API 抓取與解析潮汐資料（增加 CORS 防護與代理） ---------- */
+/* ---------- 從 CWA API 抓取與解析潮汐資料 ---------- */
 async function fetchAndParseTideData() {
-  let data = null;
-
-  // 嘗試直接連線
   try {
-    const response = await fetch(RAW_URL);
-    if (response.ok) {
-      data = await response.json();
+    const response = await fetch(API_URL);
+    if (!response.ok) throw new Error("HTTP 錯誤碼: " + response.status);
+    
+    const data = await response.json();
+    if (!data.records || !data.records.TideForecasts || data.records.TideForecasts.length === 0) {
+      return false;
     }
-  } catch (err) {
-    console.warn("直接連線 CWA API 受到 CORS 限制，嘗試使用 Proxy 代理存取...");
-  }
 
-  // 若直接連線失敗（常見於瀏覽器端 CORS 限制），改用 corsproxy.io
-  if (!data) {
-    try {
-      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(RAW_URL)}`;
-      const response = await fetch(proxyUrl);
-      if (response.ok) {
-        data = await response.json();
-      }
-    } catch (err) {
-      console.error("使用 Proxy 代理存取仍然失敗：", err);
-    }
-  }
-
-  if (!data || !data.records || !data.records.location) return false;
-
-  try {
-    const locations = data.records.location;
-    if (!locations || locations.length === 0) return false;
-
-    let station = null;
-    for (const loc of locations) {
-      const found = loc.station.find(s => s.stationName.includes("水尾") || s.stationName.includes("後龍"));
-      if (found) { station = found; break; }
-    }
-    if (!station) station = locations[0].station[0];
+    const dailyList = data.records.TideForecasts[0].Location.TimePeriods.Daily;
+    if (!dailyList || dailyList.length === 0) return false;
 
     const daysMap = {};
+    const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
 
-    station.validTime.forEach(vt => {
-      const tideElement = vt.weatherElement.find(el => el.elementName === "Tide");
-      if (tideElement && tideElement.time) {
-        tideElement.time.forEach(t => {
-          const dataTime = t.dataTime;
-          if (!dataTime) return;
+    dailyList.forEach(daily => {
+      const dateStr = daily.Date; // YYYY-MM-DD
+      const dateObj = new Date(dateStr.replace(/-/g, "/"));
+      const wd = weekDays[dateObj.getDay()];
+      
+      // 處理農曆月份格式，例如 "2026-06-19" 轉成 "06/19"
+      let lunarStr = "—";
+      if (daily.LunarDate) {
+        const parts = daily.LunarDate.split("-");
+        if (parts.length === 3) lunarStr = `${parts[1]}/${parts[2]}`;
+      }
 
-          const dateObj = new Date(dataTime.replace(/-/g, "/")); // 增強 Date 相容性
-          const dateStr = `${dateObj.getFullYear()}-${pad(dateObj.getMonth()+1)}-${pad(dateObj.getDate())}`;
-          const timeStr = `${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}`;
+      const tideRange = daily.TideRange || "中"; // 大 / 中 / 小潮
+      const events = [];
 
-          let tideStatus = "";
-          let tideHeight = 0;
+      if (daily.Time && daily.Time.length > 0) {
+        daily.Time.forEach(t => {
+          const dt = t.DateTime; // "2026-08-01T00:36:00+08:00"
+          if (!dt) return;
 
-          if (t.parameter) {
-            t.parameter.forEach(p => {
-              if (p.parameterName === "潮位") tideStatus = p.parameterValue;
-              if (p.parameterName === "相對海平面高度") tideHeight = Number(p.parameterValue);
-            });
+          const timeStr = dt.substring(11, 16); // 取出 "00:36"
+          const tideStatus = t.Tide || (t.Parameter ? t.Parameter.find(p=>p.ParameterName==="潮位")?.ParameterValue : "");
+          
+          // 相對海圖基準高度 (AboveChartDatum) 或相對平均海平面高度
+          let height = 0;
+          if (t.AboveChartDatum !== undefined) {
+            height = Number(t.AboveChartDatum);
+          } else if (t.AboveTWVD !== undefined) {
+            height = Number(t.AboveTWVD);
           }
 
-          if (!daysMap[dateStr]) {
-            const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
-            daysMap[dateStr] = {
-              date: dateStr,
-              wd: weekDays[dateObj.getDay()],
-              lunar: "—",
-              events: []
-            };
-          }
-
-          daysMap[dateStr].events.push([tideStatus, timeStr, tideHeight]);
+          events.push([tideStatus, timeStr, height]);
         });
       }
+
+      daysMap[dateStr] = [dateStr, wd, lunarStr, tideRange, events];
     });
 
-    DAYS = Object.keys(daysMap).sort().map(dStr => {
-      const d = daysMap[dStr];
-      const heights = d.events.map(e => e[2]);
-      const diff = heights.length > 0 ? (Math.max(...heights) - Math.min(...heights)) : 0;
-      
-      let rangeType = "中";
-      if (diff > 400) rangeType = "大";
-      else if (diff < 250) rangeType = "小";
+    // 依日期升冪排序
+    DAYS = Object.keys(daysMap).sort().map(k => daysMap[k]);
 
-      return [d.date, d.wd, d.lunar, rangeType, d.events];
-    });
-
+    // 展平為時間軸 FLAT
     FLAT = [];
     DAYS.forEach(([date,,,,events])=>{
       events.forEach(([type,time,h])=>{
@@ -497,7 +462,7 @@ async function fetchAndParseTideData() {
 
     return true;
   } catch (err) {
-    console.error("資料剖析失敗：", err);
+    console.error("資料解析失敗：", err);
     return false;
   }
 }
@@ -714,7 +679,7 @@ function render(){
   document.getElementById("rangeBadge").textContent = "潮差：" + range;
   document.getElementById("rangeBadge").className = "badge " + range;
   document.getElementById("dateCaption").textContent =
-    `${date.replace(/-/g,'/')}（${wd}） · 站點：後龍(T000506) · 日出 ${minToLabel(sunrise)} / 日落 ${minToLabel(sunset)}`;
+    `${date.replace(/-/g,'/')}（${wd}） · 農曆 ${lunar} · 站點：後龍(10005060) · 日出 ${minToLabel(sunrise)} / 日落 ${minToLabel(sunset)}`;
 
   const dayStart = toTs(date,"00:00");
   const N = 240;
@@ -725,9 +690,9 @@ function render(){
   }
 
   const allHeights = FLAT.map(e => e.h);
-  const globalMinH = Math.min(...allHeights);
-  const globalMaxH = Math.max(...allHeights);
-  const yPad = (globalMaxH - globalMinH) * 0.15;
+  const globalMinH = FLAT.length > 0 ? Math.min(...allHeights) : 0;
+  const globalMaxH = FLAT.length > 0 ? Math.max(...allHeights) : 500;
+  const yPad = (globalMaxH - globalMinH) * 0.15 || 50;
   const yLo = globalMinH - yPad;
   const yHi = globalMaxH + yPad;
 
@@ -753,13 +718,13 @@ function render(){
   for (let hr=0; hr<=24; hr+=3){
     const x = xOf(hr/24*N);
     axis += `<line x1="${x}" y1="${PAD_T}" x2="${x}" y2="${H-PAD_B}" stroke="#EEE7D6" stroke-width="1"/>`;
-    axis += `<text x="${x}" y="${H-PAD_B+18}" font-size="11" fill="#7A8582" text-anchor="middle" font-family="Roboto Mono, monospace">${pad(hr)}:00</text>`;
+    axis += `<text x="${x}" y="${H-PAD_B+18}" font-size="11" fill="#7A8582" text-anchor="middle" font-family="sans-serif">${pad(hr)}:00</text>`;
   }
   
   for (let h = Math.ceil(yLo/100)*100; h <= yHi; h += 100){
     const y = yOf(h);
     axis += `<line x1="${PAD_L}" y1="${y}" x2="${W-PAD_R}" y2="${y}" stroke="#E5DCC6" stroke-width="1" stroke-dasharray="4 4"/>`;
-    axis += `<text x="${PAD_L-8}" y="${y+4}" font-size="11" fill="#7A8582" text-anchor="end" font-family="Roboto Mono, monospace">${h}</text>`;
+    axis += `<text x="${PAD_L-8}" y="${y+4}" font-size="11" fill="#7A8582" text-anchor="end" font-family="sans-serif">${h}</text>`;
   }
 
   let markers = "";
@@ -770,8 +735,8 @@ function render(){
     const color = type==="滿潮" ? "var(--tide-blue)" : "var(--seagrass)";
     markers += `<circle cx="${x}" cy="${y}" r="4.5" fill="${color}" stroke="#fff" stroke-width="1.5"/>`;
     const labelY = y < H*0.4 ? y+18 : y-12;
-    markers += `<text x="${x}" y="${labelY}" font-size="11.5" fill="${color}" text-anchor="middle" font-family="Roboto Mono, monospace" font-weight="700">${type} ${time}</text>`;
-    markers += `<text x="${x}" y="${labelY + 13}" font-size="10" fill="#8A948F" text-anchor="middle" font-family="Roboto Mono, monospace">${h}cm</text>`;
+    markers += `<text x="${x}" y="${labelY}" font-size="11.5" fill="${color}" text-anchor="middle" font-family="sans-serif" font-weight="700">${type} ${time}</text>`;
+    markers += `<text x="${x}" y="${labelY + 13}" font-size="10" fill="#8A948F" text-anchor="middle" font-family="sans-serif">${h}cm</text>`;
   });
 
   let nowLine = "";
@@ -780,7 +745,7 @@ function render(){
     const nowMin = now.getHours()*60+now.getMinutes();
     const x = xOf(nowMin/1440*N);
     nowLine = `<line x1="${x}" y1="${PAD_T-6}" x2="${x}" y2="${H-PAD_B}" stroke="var(--coral)" stroke-width="1.6" stroke-dasharray="4 3"/>
-               <text x="${x}" y="${PAD_T-9}" font-size="10.5" fill="var(--coral)" text-anchor="middle" font-family="Roboto Mono, monospace" font-weight="700">NOW</text>`;
+               <text x="${x}" y="${PAD_T-9}" font-size="10.5" fill="var(--coral)" text-anchor="middle" font-family="sans-serif" font-weight="700">NOW</text>`;
   }
 
   svg.innerHTML = `
@@ -822,8 +787,8 @@ function updateNowCard(){
 
   const h = interpAt(now);
   const hSoon = interpAt(new Date(now.getTime()+5*60000));
-  const trend = hSoon > h ? "漲潮中" : "退潮中";
-  nowBig.textContent = `潮位約 ${Math.round(h)} cm · ${trend}`;
+  const trend = (hSoon !== null && h !== null && hSoon > h) ? "漲潮中" : "退潮中";
+  nowBig.textContent = h !== null ? `潮位約 ${Math.round(h)} cm · ${trend}` : `潮位讀取中 · ${trend}`;
 
   const recos = recoForDay(today);
   const nowMin = now.getHours()*60+now.getMinutes();
@@ -856,7 +821,7 @@ async function initApp() {
     render();
   } else {
     document.getElementById("nowBig").textContent = "資料載入失敗";
-    document.getElementById("nowSub").textContent = "無法連線至中央氣象署 API，請檢查網路狀態或授權碼設定。";
+    document.getElementById("nowSub").textContent = "無法解析氣象署 API 資料，請檢查 API 參數或網路狀態。";
   }
 }
 

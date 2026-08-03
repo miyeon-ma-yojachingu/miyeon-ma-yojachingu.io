@@ -1,376 +1,550 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>水尾潮汐曆｜牽罟與磯釣的潮汐指南</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --tide-deep:#0F2A33;
-    --tide-blue:#1C4956;
-    --foam:#F5F1E6;
-    --foam-2:#EAE2CE;
-    --sand:#DFC79C;
-    --rope:#9C6B34;
-    --rope-soft:rgba(156,107,52,0.16);
-    --coral:#D9603E;
-    --coral-soft:rgba(217,96,62,0.16);
-    --seagrass:#4B6B4E;
-    --ink:#1B2422;
-    --ink-soft:#4B5754;
-    --line:#D8CBAE;
-  }
-  *{box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
-  body{
-    margin:0;
-    background:var(--foam);
-    color:var(--ink);
-    font-family:'Noto Sans TC',sans-serif;
-    line-height:1.7;
-  }
-  h1,h2,h3{font-family:'Noto Serif TC',serif; margin:0; letter-spacing:.02em;}
-  a{color:inherit;}
-  img,svg{display:block;}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水尾潮汐曆｜牽罟與磯釣的動態潮汐指南</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { 
+            width: 100%; 
+            height: 100%; 
+            overflow-x: hidden; 
+            background-color: #0a090b; 
+            font-family: 'Noto Serif TC', 'Songti TC', 'MS Mincho', serif; 
+            color: #f4eae1;
+            scroll-behavior: smooth;
+            line-height: 1.8;
+        }
 
-  /* ---------- HERO ---------- */
-  .hero{
-    position:relative;
-    background:radial-gradient(120% 140% at 20% -10%, #1E5566 0%, var(--tide-deep) 55%, #081B21 100%);
-    color:var(--foam);
-    padding:56px 20px 40px;
-    overflow:hidden;
-  }
-  .hero-waves{position:absolute; inset:auto 0 0 0; opacity:.5; pointer-events:none;}
-  .hero-inner{max-width:960px; margin:0 auto; position:relative; z-index:2;}
-  .eyebrow{
-    display:inline-flex; align-items:center; gap:8px;
-    font-size:12px; letter-spacing:.16em;
-    text-transform:uppercase; color:#BFE0DE; opacity:.85; margin-bottom:14px;
-  }
-  .eyebrow::before{content:""; width:18px; height:1px; background:#BFE0DE; display:inline-block;}
-  .hero h1{font-size:clamp(34px,6vw,56px); font-weight:900; line-height:1.15;}
-  .hero h1 em{font-style:normal; color:var(--sand);}
-  .hero p.lede{max-width:56ch; margin-top:16px; font-size:16px; color:#DCEAE8; opacity:.92;}
+        .mono { font-family: 'Roboto Mono', monospace; }
 
-  .now-card{
-    margin-top:32px;
-    background:rgba(255,255,255,0.06);
-    border:1px solid rgba(255,255,255,0.16);
-    border-radius:18px;
-    padding:22px 24px;
-    backdrop-filter:blur(6px);
-    display:grid;
-    grid-template-columns:1fr auto;
-    gap:16px;
-    align-items:center;
-  }
-  .now-card .label{font-size:12px; letter-spacing:.1em; color:#9FC6C3;}
-  .now-card .big{font-size:clamp(22px,3.4vw,30px); font-weight:700; margin-top:4px; font-family:'Noto Serif TC',serif;}
-  .now-card .sub{font-size:13.5px; color:#CFE3E1; margin-top:6px;}
-  .now-pill{
-    justify-self:end;
-    padding:8px 16px; border-radius:999px; font-size:13px; font-weight:700;
-    white-space:nowrap;
-  }
-  .pill-koo{background:var(--rope); color:#fff;}
-  .pill-fish{background:var(--coral); color:#fff;}
-  .pill-wait{background:rgba(255,255,255,0.14); color:#EAF3F2; border:1px solid rgba(255,255,255,0.3);}
+        /* 滿版背景 Canvas */
+        canvas#flowField { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100vw; 
+            height: 100vh; 
+            z-index: 1; 
+        }
 
-  /* ---------- DAY PICKER ---------- */
-  .day-picker-wrap{
-    background:var(--tide-blue);
-    padding:14px 0;
-    position:sticky; top:0; z-index:10;
-    box-shadow:0 4px 14px rgba(0,0,0,.12);
-  }
-  .day-picker{
-    display:flex; gap:8px; overflow-x:auto; padding:0 20px;
-    max-width:960px; margin:0 auto;
-    scrollbar-width:thin;
-  }
-  .day-picker::-webkit-scrollbar{height:5px;}
-  .day-picker::-webkit-scrollbar-thumb{background:rgba(255,255,255,.25); border-radius:4px;}
-  .day-btn{
-    flex:0 0 auto;
-    background:rgba(255,255,255,.06);
-    border:1px solid rgba(255,255,255,.16);
-    color:#DCEAE8;
-    border-radius:12px;
-    padding:8px 12px;
-    font-size:12.5px;
-    cursor:pointer;
-    text-align:center;
-    transition:background .15s, transform .15s;
-    line-height:1.4;
-  }
-  .day-btn:hover{background:rgba(255,255,255,.14);}
-  .day-btn.today{border-color:var(--coral);}
-  .day-btn.active{background:var(--sand); color:var(--tide-deep); border-color:var(--sand); font-weight:700;}
-  .day-btn .dot{display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:5px;}
-  .dot-大{background:var(--coral);}
-  .dot-中{background:var(--sand);}
-  .dot-小{background:var(--seagrass);}
+        /* 暗色漸層遮罩 */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(180deg, rgba(10,9,11,0.25) 0%, rgba(10,9,11,0.85) 100%);
+            z-index: 2;
+            pointer-events: none;
+        }
 
-  /* ---------- MAIN GRID & SIDEBAR ---------- */
-  main{max-width:960px; margin:0 auto; padding:36px 20px 10px;}
-  
-  .main-grid {
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 24px;
-    align-items: start;
-  }
-  @media (max-width: 820px) {
-    .main-grid { grid-template-columns: 1fr; }
-  }
+        /* 右側固定目錄 (Index Navigation) */
+        .index-nav {
+            position: fixed;
+            right: 4%;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 1.8rem;
+        }
+        .index-nav a {
+            color: rgba(244, 234, 225, 0.4);
+            text-decoration: none;
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            transition: all 0.4s ease;
+        }
+        .index-nav a:hover, .index-nav a.active {
+            color: #f4eae1;
+            text-shadow: 0 0 12px rgba(244, 234, 225, 0.8);
+        }
 
-  .sidebar {
-    background: rgba(223, 199, 156, 0.15);
-    border: 1px solid rgba(223, 199, 156, 0.4);
-    border-radius: 18px;
-    padding: 22px 20px;
-    position: sticky;
-    top: 80px;
-  }
-  .sidebar h3 {
-    font-size: 17px;
-    color: var(--rope);
-    margin-bottom: 6px;
-  }
-  .sidebar p {
-    font-size: 13px;
-    color: var(--ink-soft);
-    margin-top: 0;
-    margin-bottom: 16px;
-    line-height: 1.5;
-  }
-  .golden-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .golden-item {
-    background: #fff;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 12px 14px;
-    cursor: pointer;
-    transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
-  }
-  .golden-item:hover {
-    border-color: var(--sand);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  }
-  .g-date {
-    font-weight: 700;
-    font-size: 14.5px;
-    color: var(--ink);
-    margin-bottom: 2px;
-  }
-  .g-time {
-    font-size: 13px;
-    color: var(--coral);
-    font-weight: 500;
-  }
-  .g-duration {
-    font-size: 11.5px;
-    color: var(--ink-soft);
-    margin-left: 4px;
-    font-weight: 400;
-  }
+        /* 主要內容區塊 */
+        .main-container {
+            position: relative;
+            z-index: 3;
+            width: 100%;
+        }
 
-  /* ---------- CHART SECTION ---------- */
-  .section-head{display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:6px;}
-  .section-head h2{font-size:22px; font-weight:900;}
-  .badge{
-    font-size:12px; padding:4px 10px; border-radius:999px;
-    border:1px solid var(--line); color:var(--ink-soft);
-  }
-  .badge.大{background:var(--coral-soft); border-color:transparent; color:#9A3B22;}
-  .badge.中{background:var(--foam-2); color:#7A5A22;}
-  .badge.小{background:rgba(75,107,78,.14); color:var(--seagrass);}
-  .date-caption{font-size:12.5px; color:var(--ink-soft); margin-bottom:18px;}
+        .section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 5vh 10%;
+        }
 
-  .chart-card{
-    background:#fff;
-    border:1px solid var(--line);
-    border-radius:18px;
-    padding:18px 14px 8px;
-  }
-  .legend{display:flex; gap:18px; flex-wrap:wrap; padding:2px 10px 14px; font-size:12.5px; color:var(--ink-soft);}
-  .legend span{display:inline-flex; align-items:center; gap:6px;}
-  .legend i{width:14px; height:10px; border-radius:3px; display:inline-block;}
-  .leg-koo{background:var(--rope-soft); border:1px solid var(--rope);}
-  .leg-fish{background:var(--coral-soft); border:1px solid var(--coral);}
-  .leg-line{background:var(--tide-blue); height:2px; width:16px; border-radius:2px;}
+        /* 序幕 Hero */
+        #hero {
+            justify-content: flex-end;
+            padding-bottom: 12vh;
+        }
+        
+        #hero h1 .sub-title {
+            display: block;
+            font-size: clamp(0.9rem, 1.8vw, 1.35rem);
+            font-weight: 300;
+            letter-spacing: 4px;
+            color: rgba(244, 234, 225, 0.75);
+            margin-bottom: 1.2rem;
+            line-height: 1.8;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+            opacity: 0;
+            animation: fadeInUp 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+        }
 
-  .reco-list{list-style:none; margin:18px 0 0; padding:0; display:grid; gap:10px;}
-  .reco-list li{
-    display:flex; gap:12px; align-items:flex-start;
-    background:var(--foam-2); border-radius:12px; padding:12px 14px; font-size:14px;
-  }
-  .reco-tag{
-    flex:0 0 auto; font-size:11.5px; font-weight:700;
-    padding:3px 9px; border-radius:999px; color:#fff; margin-top:2px;
-  }
-  .tag-koo{background:var(--rope);}
-  .tag-fish{background:var(--coral);}
+        #hero h1 .main-title {
+            display: inline-block;
+            font-size: clamp(2.6rem, 5.8vw, 4.8rem);
+            font-weight: 800;
+            letter-spacing: 10px;
+            line-height: 1.2;
+            background: linear-gradient(135deg, #ffffff 0%, #f4eae1 60%, #c9bebd 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 4px 15px rgba(0,0,0,0.8));
+            opacity: 0;
+            animation: fadeInUp 1.4s cubic-bezier(0.16, 1, 0.3, 1) 1.2s forwards;
+        }
 
-  /* ---------- GUIDE CARDS ---------- */
-  .guide{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:44px;}
-  @media (max-width:720px){.guide{grid-template-columns:1fr;}}
-  .g-card{
-    background:#fff; border:1px solid var(--line); border-radius:18px; padding:24px;
-  }
-  .g-card .icon{width:44px; height:44px; margin-bottom:14px;}
-  .g-card h3{font-size:19px; margin-bottom:10px;}
-  .g-card p{font-size:14.5px; color:var(--ink-soft);}
-  .g-card.koo{border-top:4px solid var(--rope);}
-  .g-card.fish{border-top:4px solid var(--coral);}
+        /* 即時潮況卡片 */
+        .now-card {
+            margin-top: 2.5rem;
+            background: rgba(10, 9, 11, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(244, 234, 225, 0.25);
+            border-left: 3px solid #dfc79c;
+            border-radius: 4px;
+            padding: 1.8rem 2.2rem;
+            max-width: 680px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 16px;
+            align-items: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            opacity: 0;
+            animation: fadeInUp 1.4s cubic-bezier(0.16, 1, 0.3, 1) 1.6s forwards;
+        }
+        .now-card .label { font-size: 0.8rem; letter-spacing: 2px; color: #dfc79c; }
+        .now-card .big { font-size: clamp(1.4rem, 2.5vw, 2.1rem); font-weight: 700; margin-top: 6px; color: #fff; }
+        .now-card .sub { font-size: 0.9rem; color: rgba(244, 234, 225, 0.75); margin-top: 6px; }
+        .now-pill {
+            padding: 8px 18px; border-radius: 999px; font-size: 0.85rem; font-weight: 700; white-space: nowrap;
+            letter-spacing: 1px;
+        }
+        .pill-koo { background: #9C6B34; color: #fff; }
+        .pill-fish { background: #D9603E; color: #fff; }
+        .pill-wait { background: rgba(244, 234, 225, 0.1); color: #f4eae1; border: 1px solid rgba(244, 234, 225, 0.3); }
 
-  /* ---------- ABOUT ---------- */
-  .about{
-    margin-top:44px;
-    background:var(--tide-deep);
-    color:#E7F1EF;
-    border-radius:20px;
-    padding:34px 28px;
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:24px;
-    align-items:center;
-  }
-  @media (max-width:720px){.about{grid-template-columns:1fr;}}
-  .about h2{color:#fff; font-size:22px; margin-bottom:12px;}
-  .about p{font-size:14.5px; color:#CFE3E1;}
-  .about .stat-row{display:flex; gap:18px; margin-top:18px; flex-wrap:wrap;}
-  .stat .num{font-size:26px; font-weight:700; color:var(--sand);}
-  .stat .cap{font-size:11.5px; color:#9FC6C3;}
+        /* 日期選擇列 */
+        .day-picker-wrap {
+            background: rgba(10, 9, 11, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 14px 0;
+            position: sticky; top: 0; z-index: 10;
+            border-bottom: 1px solid rgba(244, 234, 225, 0.15);
+        }
+        .day-picker {
+            display: flex; gap: 10px; overflow-x: auto; padding: 0 5%;
+            max-width: 1200px; margin: 0 auto;
+            scrollbar-width: thin;
+        }
+        .day-picker::-webkit-scrollbar { height: 4px; }
+        .day-picker::-webkit-scrollbar-thumb { background: rgba(244, 234, 225, 0.25); }
+        .day-btn {
+            flex: 0 0 auto;
+            background: rgba(244, 234, 225, 0.05);
+            border: 1px solid rgba(244, 234, 225, 0.2);
+            color: rgba(244, 234, 225, 0.7);
+            border-radius: 4px;
+            padding: 8px 14px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.25s ease;
+            font-family: inherit;
+        }
+        .day-btn:hover { background: rgba(244, 234, 225, 0.15); color: #fff; }
+        .day-btn.active { background: #dfc79c; color: #0a090b; border-color: #dfc79c; font-weight: 700; }
+        .day-btn .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 6px; }
+        .dot-大 { background: #D9603E; }
+        .dot-中 { background: #dfc79c; }
+        .dot-小 { background: #4B6B4E; }
 
-  footer{
-    max-width:960px; margin:44px auto 0; padding:22px 20px 50px;
-    font-size:12.5px; color:var(--ink-soft); border-top:1px solid var(--line);
-  }
-  footer a{text-decoration:underline; color:var(--tide-blue);}
-  footer p{margin:6px 0;}
+        /* 主網格區塊 */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+            align-items: start;
+        }
+        @media (max-width: 880px) { .main-grid { grid-template-columns: 1fr; } }
 
-  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto;} }
-</style>
+        /* 通用浮世繪卡片 */
+        .story-card {
+            background: rgba(10, 9, 11, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 2.2rem;
+            border-left: 1px solid rgba(244, 234, 225, 0.5);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            border-radius: 0 4px 4px 0;
+            margin-bottom: 2rem;
+        }
+        .story-card h2 {
+            font-size: 1.6rem;
+            margin-bottom: 1.2rem;
+            letter-spacing: 3px;
+            font-weight: 600;
+            color: #f4eae1;
+        }
+        .story-card p {
+            font-size: 0.95rem;
+            line-height: 1.95;
+            color: rgba(244, 234, 225, 0.82);
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+
+        /* 標籤與徽章 */
+        .badge {
+            font-size: 0.8rem; padding: 3px 12px; border-radius: 999px;
+            border: 1px solid rgba(244, 234, 225, 0.3); color: rgba(244, 234, 225, 0.8);
+        }
+        .badge.大 { background: rgba(217, 96, 62, 0.2); border-color: #D9603E; color: #f4eae1; }
+        .badge.中 { background: rgba(223, 199, 156, 0.2); border-color: #dfc79c; color: #f4eae1; }
+        .badge.小 { background: rgba(75, 107, 78, 0.2); border-color: #4B6B4E; color: #f4eae1; }
+
+        .date-caption { font-size: 0.85rem; color: rgba(244, 234, 225, 0.6); margin-bottom: 1.2rem; }
+
+        /* 圖表繪製區 */
+        .chart-card {
+            background: rgba(10, 9, 11, 0.4);
+            border: 1px solid rgba(244, 234, 225, 0.15);
+            border-radius: 4px;
+            padding: 18px 12px 8px;
+        }
+        .legend { display: flex; gap: 18px; flex-wrap: wrap; padding: 12px 10px; font-size: 0.8rem; color: rgba(244, 234, 225, 0.7); }
+        .legend span { display: inline-flex; align-items: center; gap: 6px; }
+        .legend i { width: 14px; height: 10px; border-radius: 2px; display: inline-block; }
+        .leg-koo { background: rgba(156, 107, 52, 0.3); border: 1px solid #9C6B34; }
+        .leg-fish { background: rgba(217, 96, 62, 0.3); border: 1px solid #D9603E; }
+        .leg-line { background: #dfc79c; height: 2px; width: 16px; }
+
+        .reco-list { list-style: none; margin-top: 18px; display: grid; gap: 10px; }
+        .reco-list li {
+            display: flex; gap: 12px; align-items: flex-start;
+            background: rgba(244, 234, 225, 0.05); border-radius: 4px; padding: 12px 14px; font-size: 0.9rem;
+            border: 1px solid rgba(244, 234, 225, 0.1);
+        }
+        .reco-tag {
+            flex: 0 0 auto; font-size: 0.75rem; font-weight: 700;
+            padding: 2px 8px; border-radius: 2px; color: #fff; margin-top: 2px;
+        }
+        .tag-koo { background: #9C6B34; }
+        .tag-fish { background: #D9603E; }
+
+        /* 側欄黃金預告 */
+        .sidebar {
+            background: rgba(10, 9, 11, 0.65);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(223, 199, 156, 0.3);
+            border-radius: 4px;
+            padding: 22px 20px;
+            position: sticky; top: 80px;
+        }
+        .sidebar h3 { font-size: 1.1rem; color: #dfc79c; margin-bottom: 8px; letter-spacing: 2px; }
+        .sidebar p { font-size: 0.85rem; color: rgba(244, 234, 225, 0.7); margin-bottom: 16px; }
+        .golden-list { display: flex; flex-direction: column; gap: 10px; }
+        .golden-item {
+            background: rgba(244, 234, 225, 0.04);
+            border: 1px solid rgba(244, 234, 225, 0.15);
+            border-radius: 4px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .golden-item:hover {
+            border-color: #dfc79c;
+            background: rgba(223, 199, 156, 0.1);
+            transform: translateX(4px);
+        }
+        .g-date { font-weight: 700; font-size: 0.95rem; color: #f4eae1; margin-bottom: 2px; }
+        .g-time { font-size: 0.85rem; color: #D9603E; }
+        .g-duration { font-size: 0.75rem; color: rgba(244, 234, 225, 0.5); }
+
+        /* 雙卡片指南 */
+        .guide-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 720px) { .guide-grid { grid-template-columns: 1fr; } }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(28px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
 <body>
 
-<header class="hero">
-  <svg class="hero-waves" viewBox="0 0 960 120" preserveAspectRatio="none" width="100%" height="120">
-    <path d="M0,60 C160,110 320,10 480,60 C640,110 800,10 960,60 L960,120 L0,120 Z" fill="#123B46"/>
-    <path d="M0,80 C160,40 320,120 480,80 C640,40 800,120 960,80 L960,120 L0,120 Z" fill="#0B242B"/>
-  </svg>
-  <div class="hero-inner">
-    <div class="eyebrow">苗栗．後龍．水尾社區</div>
-    <h1>討海人的，<em>秘密武器</em>!</h1>
-    <p class="lede">後龍溪出海口的水尾，兩百年來跟著潮水討海。這裡潮差大，看懂今天的潮水曲線，就知道何時該下海牽罟，何時該站上沙灘甩竿。</p>
+<!-- 動態向量海浪 Canvas -->
+<canvas id="flowField"></canvas>
 
-    <!-- NOW 即時卡片 -->
-    <div class="now-card" id="nowCard">
-      <div>
-        <div class="label">NOW · 即時潮況</div>
-        <div class="big" id="nowBig">即時連線中央氣象署抓取最新潮汐中…</div>
-        <div class="sub" id="nowSub"></div>
-      </div>
-      <div class="now-pill pill-wait" id="nowPill">—</div>
-    </div>
-  </div>
-</header>
+<!-- 漸層遮罩 -->
+<div class="overlay"></div>
 
-<nav class="day-picker-wrap">
-  <div class="day-picker" id="dayPicker"></div>
+<!-- 右側索引選單 -->
+<nav class="index-nav">
+    <a href="#hero" class="active">序幕</a>
+    <a href="#chart-section">討海黃金時間</a>
+    <a href="#guide-section">討海指南</a>
+    <a href="#about-section">水尾記憶</a>
 </nav>
 
-<main>
-  <div class="main-grid">
-    <!-- 左側主圖表區 -->
-    <div>
-      <section id="chartSection">
-        <div class="section-head">
-          <h2 id="chartTitle">今日潮汐曲線</h2>
-          <span class="badge" id="rangeBadge">—</span>
+<!-- 主內容區 -->
+<div class="main-container">
+
+    <!-- 序幕 Hero -->
+    <section class="section" id="hero">
+        <h1>
+            <span class="sub-title">苗栗．後龍．水尾社區 — 潮浪交織的三百年</span>
+            <span class="main-title">討海人的，秘密武器</span>
+        </h1>
+
+        <!-- 即時潮況 -->
+        <div class="now-card" id="nowCard">
+            <div>
+                <div class="label">NOW · 即時潮況</div>
+                <div class="big" id="nowBig">連線中央氣象署中…</div>
+                <div class="sub" id="nowSub"></div>
+            </div>
+            <div class="now-pill pill-wait" id="nowPill">—</div>
         </div>
-        <div class="date-caption" id="dateCaption">—</div>
+    </section>
 
-        <div class="chart-card">
-          <svg id="tideChart" viewBox="0 0 800 300" width="100%" height="100%" role="img" aria-label="潮汐曲線圖"></svg>
-          <div class="legend">
-            <span><i class="leg-line"></i> 潮位曲線</span>
-            <span><i class="leg-koo"></i> 建議牽罟時段</span>
-            <span><i class="leg-fish"></i> 建議垂釣時段</span>
-          </div>
+    <!-- 日期選擇列 -->
+    <nav class="day-picker-wrap">
+        <div class="day-picker" id="dayPicker"></div>
+    </nav>
+
+    <!-- 章節一：潮汐圖表 -->
+    <section class="section" id="chart-section">
+        <div class="main-grid">
+            <div>
+                <div class="story-card" style="padding-bottom: 1.5rem;">
+                    <div class="section-head" style="display:flex; justify-content:space-between; align-items:baseline;">
+                        <h2 id="chartTitle">今日潮汐曲線</h2>
+                        <span class="badge" id="rangeBadge">—</span>
+                    </div>
+                    <div class="date-caption" id="dateCaption">—</div>
+
+                    <div class="chart-card">
+                        <svg id="tideChart" viewBox="0 0 800 300" width="100%" height="100%"></svg>
+                        <div class="legend">
+                            <span><i class="leg-line"></i> 潮位曲線</span>
+                            <span><i class="leg-koo"></i> 建議牽罟時段</span>
+                            <span><i class="leg-fish"></i> 建議垂釣時段</span>
+                        </div>
+                    </div>
+
+                    <ul class="reco-list" id="recoList"></ul>
+                </div>
+            </div>
+
+            <!-- 黃金釣魚日側欄 -->
+            <aside class="sidebar">
+                <h3>🌟 黃金釣魚日預告</h3>
+                <p>「流水時段」與「晨昏區間」交會重疊超過一小時的絕佳日子：</p>
+                <div class="golden-list" id="goldenList"></div>
+            </aside>
         </div>
+    </section>
 
-        <ul class="reco-list" id="recoList"></ul>
-      </section>
-    </div>
-    
-    <!-- 右側：黃金釣魚日預告側欄 -->
-    <aside class="sidebar" id="goldenSidebar">
-      <h3>🌟 黃金釣魚日預告</h3>
-      <p>目前資料區間內，「流水時段」與「清晨/黃昏」有重疊超過一小時以上的絕佳日子：</p>
-      <div class="golden-list" id="goldenList">
-        <!-- 程式自動產生預告清單 -->
-      </div>
-    </aside>
-  </div>
+    <!-- 章節二：討海指南 -->
+    <section class="section" id="guide-section">
+        <div class="guide-grid">
+            <div class="story-card" style="border-left-color: #9C6B34;">
+                <h2>牽罟 · 潮退的臉色</h2>
+                <p>牽罟是水尾流傳超過兩百年的古老漁法。竹筏出海撒網，配合岸上百人合力拉繩。需要取得船出得去、人拉得動的，剛剛好的退潮時段。</p>
+                <p>本曆建議牽罟時段機制為：當日<strong>乾潮時間落在 14:00 至 18:00 之間</strong>時，自動擷取<strong>乾潮前兩小時</strong>為最佳牽罟時段。</p>
+            </div>
+            <div class="story-card" style="border-left-color: #D9603E;">
+                <h2>磯釣 · 流水才有魚</h2>
+                <p>釣魚人常說，流水才有魚。接近滿潮時魚訊最好，停流時魚訊反倒差，真正好咬鉤的是除去平潮時段，漲潮八分一路到退潮七分的流水階段。</p>
+                <p>若能碰上日出或日落前後的晨昏區間，覓食靠岸的魚群機會更大。</p>
+            </div>
+        </div>
+    </section>
 
-  <section class="guide">
-    <div class="g-card koo">
-      <svg class="icon" viewBox="0 0 48 48" fill="none">
-        <path d="M6 30c6 8 30 8 36 0" stroke="#9C6B34" stroke-width="2.5" stroke-linecap="round"/>
-        <path d="M10 30V16l14-6 14 6v14" stroke="#9C6B34" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="24" cy="16" r="2" fill="#9C6B34"/>
-      </svg>
-      <h3>牽罟，要看退潮的臉色</h3>
-      <p>牽罟是水尾流傳超過兩百年的討海方式：竹筏先把網繩一端固定在沙灘，船隻順著魚群繞出一個半圓下網，再折返岸邊；兩隊人馬合力，把整張網從海裡拔上岸。船要出得去，就得留一點水深；網要拉得動、人要站得穩，沙灘也得先露出來。所以牽罟通常抓在<strong>退潮到乾潮前後</strong>這段時間——水還沒退乾，船能作業，沙灘卻已寬闊到足夠拔河。本曆建議牽罟時段為下午 14:00 至 18:00 間出現乾潮的日子，取乾潮前兩小時為最佳時機，正式體驗仍以水尾社區與牽罟班公告為準。</p>
-    </div>
-    <div class="g-card fish">
-      <svg class="icon" viewBox="0 0 48 48" fill="none">
-        <path d="M6 24c8-10 28-10 36 0" stroke="#D9603E" stroke-width="2.5" stroke-linecap="round"/>
-        <path d="M18 24c4 6 8 6 12 0" stroke="#D9603E" stroke-width="2.5" stroke-linecap="round"/>
-        <circle cx="24" cy="24" r="3" fill="#D9603E"/>
-      </svg>
-      <h3>魚會跟著流水來</h3>
-      <p>討海人常說「流水才有魚」。滿潮那一刻其實是「憩流」，水幾乎不流動，魚訊反而最差；真正好咬鉤的是<strong>還有流水的階段</strong>——大約漲潮到八分滿，一路到退潮剩七分左右，水持續流動，覓食的魚群會靠著這股流勢靠近岸邊。若能碰上日出前後一小時、或是日落前兩小時的晨昏區間，機會又更好一些。這些都是經驗法則，實際魚況仍受風浪、天氣與季節影響，僅供出發前參考。</p>
-    </div>
-  </section>
+    <!-- 章節三：水尾記憶 -->
+    <section class="section" id="about-section">
+        <div class="story-card" style="max-width: 800px;">
+            <h2>關於水尾社區</h2>
+            <p>水尾位於後龍溪出海口，是個約四百戶的農漁聚落。在傳統農漁業式微的大環境下，仍守著兩百年的牽罟文化，以農特產業與遊程體驗的形式延續下去。</p>
+            <p>漲潮釣魚，退潮牽罟、挖文蛤，配著傍晚夕陽，是屬於後龍溪口浪漫的記憶。</p>
+        </div>
+    </section>
 
-  <section class="about">
-    <div>
-      <h2>關於水尾社區</h2>
-      <p>水尾位在後龍溪出海口，是個大約四百人的農漁混合小聚落，居民以長輩居多，卻仍認真守著牽罟文化——社區裡有一座牽罟文化故事館，訴說這項兩百年漁法的故事，也不時號召上百人一起下海，體驗與大海拔河的滋味。海邊撿回來的浮球與漂流木，被長輩們彩繪成裝置藝術，妝點著整片水尾沙灘；退潮時沙灘後方能挖文蛤，傍晚時分，這裡更是後龍人私藏的看夕陽地點。</p>
-      <div class="stat-row">
-        <div class="stat"><div class="num">~400</div><div class="cap">社區居民</div></div>
-        <div class="stat"><div class="num">200+</div><div class="cap">年牽罟歷史</div></div>
-        <div class="stat"><div class="num">2</div><div class="cap">次滿潮／乾潮每日</div></div>
-      </div>
-    </div>
-    <svg viewBox="0 0 300 220" width="100%" height="100%">
-      <path d="M0,150 C60,120 90,180 150,150 C210,120 240,180 300,150 L300,220 L0,220 Z" fill="#173C47"/>
-      <path d="M0,175 C60,155 90,195 150,175 C210,155 240,195 300,175 L300,220 L0,220 Z" fill="#0F2A33"/>
-      <circle cx="230" cy="55" r="26" fill="#DFC79C" opacity=".85"/>
-      <path d="M40,140 L90,110 L140,140 Z" fill="none" stroke="#DFC79C" stroke-width="2"/>
-      <line x1="90" y1="110" x2="90" y2="90" stroke="#DFC79C" stroke-width="2"/>
-    </svg>
-  </section>
-</main>
-
-<footer>
-  <p>潮汐資料來源：交通部中央氣象署「未來30天潮汐預報」（苗栗縣後龍鎮測站，經由 OpenAPI 即時擷取）。若查詢過程有延遲，亦可至 <a href="https://www.cwa.gov.tw/V8/C/M/Fishery/tide_30day_MOD/T000506.html" target="_blank" rel="noopener">中央氣象署官網</a> 查詢當時的最新預報。</p>
-  <p>牽罟與垂釣建議時段，是依潮汐漲退的經驗法則推算而成，並非水尾社區的官方活動時刻表；正式體驗行程與報名，請洽水尾社區。</p>
-</footer>
+</div>
 
 <script>
-/* ---------- 全域變數與 CWA API 設定 ---------- */
+/* =========================================================
+   1. SIMPLEX NOISE & 浮世繪動態海浪向量場CANVAS
+   ========================================================= */
+const SimplexNoise = function() {
+    var F3 = 1.0/3.0, G3 = 1.0/6.0;
+    var p = new Uint8Array(256);
+    for (var i=0; i<256; i++) p[i] = Math.floor(Math.random()*256);
+    var perm = new Uint8Array(512), permMod12 = new Uint8Array(512);
+    for (var i=0; i<512; i++) { perm[i] = p[i & 255]; permMod12[i] = (perm[i] % 12); }
+    return {
+        noise3D: function(xin, yin, zin) {
+            var n0, n1, n2, n3;
+            var s = (xin+yin+zin)*F3; var i = Math.floor(xin+s), j = Math.floor(yin+s), k = Math.floor(zin+s);
+            var t = (i+j+k)*G3; var X0 = i-t, Y0 = j-t, Z0 = k-t; var x0 = xin-X0, y0 = yin-Y0, z0 = zin-Z0;
+            var i1, j1, k1, i2, j2, k2;
+            if(x0>=y0) { if(y0>=z0) { i1=1; j1=0; k1=0; i2=1; j2=1; k2=0; } else if(x0>=z0) { i1=1; j1=0; k1=0; i2=1; j2=0; k2=1; } else { i1=0; j1=0; k1=1; i2=1; j2=0; k2=1; } }
+            else { if(y0<z0) { i1=0; j1=0; k1=1; i2=0; j2=1; k2=1; } else if(x0<z0) { i1=0; j1=1; k1=0; i2=0; j2=1; k2=1; } else { i1=0; j1=1; k1=0; i2=1; j2=1; k2=0; } }
+            var x1 = x0 - i1 + G3, y1 = y0 - j1 + G3, z1 = z0 - k1 + G3; var x2 = x0 - i2 + 2.0*G3, y2 = y0 - j2 + 2.0*G3, z2 = z0 - k2 + 2.0*G3; var x3 = x0 - 1.0 + 3.0*G3, y3 = y0 - 1.0 + 3.0*G3, z3 = z0 - 1.0 + 3.0*G3;
+            var ii = i & 255, jj = j & 255, kk = k & 255;
+            var gi0 = permMod12[ii+perm[jj+perm[kk]]], gi1 = permMod12[ii+i1+perm[jj+j1+perm[kk+k1]]], gi2 = permMod12[ii+i2+perm[jj+j2+perm[kk+k2]]], gi3 = permMod12[ii+1+perm[jj+1+perm[kk+1]]];
+            var t0 = 0.6 - x0*x0-y0*y0-z0*z0; if(t0<0) n0 = 0.0; else { t0 *= t0; n0 = t0 * t0 * (gi0%2===0?1:-1)*(x0+y0+z0); }
+            var t1 = 0.6 - x1*x1-y1*y1-z1*z1; if(t1<0) n1 = 0.0; else { t1 *= t1; n1 = t1 * t1 * (gi1%2===0?1:-1)*(x1+y1+z1); }
+            var t2 = 0.6 - x2*x2-y2*y2-z2*z2; if(t2<0) n2 = 0.0; else { t2 *= t2; n2 = t2 * t2 * (gi2%2===0?1:-1)*(x2+y2+z2); }
+            var t3 = 0.6 - x3*x3-y3*y3-z3*z3; if(t3<0) n3 = 0.0; else { t3 *= t3; n3 = t3 * t3 * (gi3%2===0?1:-1)*(x3+y3+z3); }
+            return 32.0*(n0 + n1 + n2 + n3);
+        }
+    };
+};
+
+const simplex = SimplexNoise();
+const canvas = document.getElementById('flowField');
+const ctx = canvas.getContext('2d');
+
+let width, height;
+let particles = [];
+const particleCount = 5000;
+
+function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+function getFlowAngle(x, y, time) {
+    const scale1 = 0.001;
+    let angle = simplex.noise3D(x * scale1, y * scale1, time * 0.8) * Math.PI * 1.5;
+    const waveTrend = -Math.PI * 0.12; 
+    angle = angle * 0.35 + waveTrend * 0.65;
+
+    const centerX = width * 0.6;
+    const centerY = height * 0.35;
+    const dx = x - centerX;
+    const dy = y - centerY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    
+    if (dist < width * 0.5) {
+        const swirl = Math.atan2(dy, dx) + Math.PI * 1.1; 
+        const strength = Math.pow(1 - dist / (width * 0.5), 1.2);
+        angle = angle * (1 - strength) + swirl * strength;
+    }
+    return angle;
+}
+
+class Particle {
+    constructor(initAllScreen = false) {
+        if (initAllScreen) {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+        } else {
+            this.reset();
+        }
+        this.px = this.x; this.py = this.y;
+        this.baseSpeed = Math.random() * 2.2 + 0.8;
+        this.speed = this.baseSpeed;
+        this.life = Math.random() * 120 + 80;
+        this.noiseVal = 0;
+    }
+
+    reset() {
+        if (Math.random() < 0.7) {
+            this.x = -20; this.y = Math.random() * height;
+        } else {
+            this.x = Math.random() * width; this.y = height + 20;
+        }
+        this.baseSpeed = Math.random() * 2.2 + 0.8;
+        this.speed = this.baseSpeed;
+        this.life = Math.random() * 120 + 80;
+        this.px = this.x; this.py = this.y;
+    }
+
+    update(time) {
+        this.px = this.x; this.py = this.y;
+        const noiseScale = 0.001;
+        this.noiseVal = simplex.noise3D(this.x * noiseScale, this.y * noiseScale, time);
+        const angle = getFlowAngle(this.x, this.y, time);
+        this.speed = this.baseSpeed * (1 + Math.abs(this.noiseVal) * 1.8);
+        this.x += Math.cos(angle) * this.speed;
+        this.y += Math.sin(angle) * this.speed;
+        this.life--;
+        if (this.life <= 0 || this.x > width + 50 || this.y > height + 50 || this.x < -50 || this.y < -50) {
+            this.reset();
+        }
+    }
+
+    draw() {
+        ctx.beginPath();
+        ctx.moveTo(this.px, this.py);
+        ctx.lineTo(this.x, this.y);
+        let strokeColor;
+        const alpha = Math.min(this.life / 80, 0.4);
+
+        if (this.speed > 4.0) {
+            strokeColor = `rgba(244, 234, 225, ${alpha * 1.2})`; ctx.lineWidth = 1.4;
+        } else if (this.speed > 2.2) {
+            strokeColor = `hsla(${198 + this.noiseVal * 10}, 50%, 45%, ${alpha})`; ctx.lineWidth = 0.8;
+        } else {
+            strokeColor = `hsla(${215 + this.noiseVal * 5}, 70%, 20%, ${alpha * 0.7})`; ctx.lineWidth = 0.5;
+        }
+        ctx.strokeStyle = strokeColor;
+        ctx.stroke();
+    }
+}
+
+for (let i = 0; i < particleCount; i++) particles.push(new Particle(true));
+
+let canvasTime = 0;
+const memCanvas = document.createElement('canvas');
+const memCtx = memCanvas.getContext('2d');
+
+function animate() {
+    if (memCanvas.width !== width || memCanvas.height !== height) {
+        memCanvas.width = width; memCanvas.height = height;
+    }
+    memCtx.clearRect(0, 0, width, height);
+    memCtx.drawImage(canvas, 0, 0);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#0a090b'; ctx.fillRect(0, 0, width, height);
+    ctx.globalAlpha = 0.965; ctx.drawImage(memCanvas, 0.3, -0.1); ctx.globalAlpha = 1.0;
+    canvasTime += 0.0006;
+    particles.forEach(p => { p.update(canvasTime); p.draw(); });
+    requestAnimationFrame(animate);
+}
+animate();
+
+
+/* =========================================================
+   2. CWA API 即時潮汐資料對接與演算法之機制
+   ========================================================= */
 let DAYS = [];
 let FLAT = [];
 let selectedIdx = 0;
@@ -380,458 +554,373 @@ const API_KEY = "CWA-16D31C9E-3B51-46D7-ACD6-A9CA840DA537";
 const locationName = encodeURIComponent("苗栗縣後龍鎮");
 const API_URL = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-A0021-001?Authorization=${API_KEY}&LocationName=${locationName}`;
 
-function pad(n){return String(n).padStart(2,"0");}
+function pad(n){ return String(n).padStart(2,"0"); }
 function minToLabel(min){
-  min = Math.max(0, Math.min(1439, Math.round(min)));
-  return pad(Math.floor(min/60))+":"+pad(min%60);
+    min = Math.max(0, Math.min(1439, Math.round(min)));
+    return pad(Math.floor(min/60)) + ":" + pad(min%60);
 }
-function timeToMin(t){const [h,m]=t.split(":").map(Number); return h*60+m;}
+function timeToMin(t){ const [h,m] = t.split(":").map(Number); return h*60+m; }
+function toTs(dateStr, timeStr){ return new Date(`${dateStr}T${timeStr}:00${TZ_OFFSET}`); }
 
-function toTs(dateStr, timeStr){
-  return new Date(`${dateStr}T${timeStr}:00${TZ_OFFSET}`);
-}
-
-/* ---------- 依據成功抓取的 JSON 結構，更新資料擷取函式 ---------- */
 async function fetchAndParseTideData() {
-  try {
-    const response = await fetch(API_URL);
-    if (!response.ok) throw new Error("HTTP 錯誤碼: " + response.status);
-    
-    const data = await response.json();
-    const forecastList = data.records.TideForecasts;
+    try {
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error("HTTP 錯誤: " + response.status);
+        const data = await response.json();
+        const forecastList = data.records.TideForecasts;
+        if (!forecastList || forecastList.length === 0) return false;
 
-    if (!forecastList || forecastList.length === 0) return false;
+        const dailyList = forecastList[0].Location.TimePeriods.Daily;
+        dailyList.sort((a, b) => new Date(a.Date) - new Date(b.Date));
 
-    const locationObj = forecastList[0].Location;
-    const dailyList = locationObj.TimePeriods.Daily;
+        const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
 
-    dailyList.sort((a, b) => new Date(a.Date) - new Date(b.Date));
+        DAYS = dailyList.map(day => {
+            const dateStr = day.Date;
+            const dateObj = new Date(dateStr.replace(/-/g, "/"));
+            const wd = weekDays[dateObj.getDay()];
+            let lunarStr = "—";
+            if (day.LunarDate) {
+                const parts = day.LunarDate.split("-");
+                if (parts.length >= 3) lunarStr = `${parts[1]}/${parts[2]}`;
+            }
+            const rangeType = day.TideRange || "中";
+            const events = [];
 
-    const weekDays = ["日", "一", "二", "三", "四", "五", "六"];
-
-    DAYS = dailyList.map(day => {
-      const dateStr = day.Date;
-      const dateObj = new Date(dateStr.replace(/-/g, "/"));
-      const wd = weekDays[dateObj.getDay()];
-
-      let lunarStr = "—";
-      if (day.LunarDate) {
-        const parts = day.LunarDate.split("-");
-        if (parts.length >= 3) lunarStr = `${parts[1]}/${parts[2]}`;
-      }
-
-      const rangeType = day.TideRange || "中";
-
-      const events = [];
-      if (day.Time && day.Time.length > 0) {
-        day.Time.forEach(t => {
-          if (!t.DateTime) return;
-          const timeStr = t.DateTime.substring(11, 16); 
-          const tideStatus = t.Tide;
-
-          let height = 0;
-          if (t.TideHeights) {
-            height = Number(t.TideHeights.AboveTWVD || t.TideHeights.AboveChartDatum || t.TideHeights.AboveLocalMSL || 0);
-          } else {
-            height = Number(t.AboveTWVD || t.AboveChartDatum || t.AboveLocalMSL || 0);
-          }
-
-          events.push([tideStatus, timeStr, height]);
+            if (day.Time && day.Time.length > 0) {
+                day.Time.forEach(t => {
+                    if (!t.DateTime) return;
+                    const timeStr = t.DateTime.substring(11, 16);
+                    const tideStatus = t.Tide;
+                    let height = 0;
+                    if (t.TideHeights) {
+                        height = Number(t.TideHeights.AboveTWVD || t.TideHeights.AboveChartDatum || t.TideHeights.AboveLocalMSL || 0);
+                    } else {
+                        height = Number(t.AboveTWVD || t.AboveChartDatum || t.AboveLocalMSL || 0);
+                    }
+                    events.push([tideStatus, timeStr, height]);
+                });
+            }
+            return [dateStr, wd, lunarStr, rangeType, events];
         });
-      }
 
-      return [dateStr, wd, lunarStr, rangeType, events];
-    });
+        FLAT = [];
+        DAYS.forEach(([date,,,,events])=>{
+            events.forEach(([type,time,h])=>{
+                FLAT.push({ts:toTs(date,time), h, type, date, time});
+            });
+        });
+        FLAT.sort((a,b)=>a.ts-b.ts);
 
-    FLAT = [];
-    DAYS.forEach(([date,,,,events])=>{
-      events.forEach(([type,time,h])=>{
-        FLAT.push({ts:toTs(date,time), h, type, date, time});
-      });
-    });
-    FLAT.sort((a,b)=>a.ts-b.ts);
-
-    // 🌟 關鍵修正：解決曲線畫不出來的問題
-    // 原本如果查詢的當天 00:00 前沒有資料點，interpAt 會回傳 null 導致整條線斷掉
-    // 這裡我們強制在時間軸最前端與最尾端補上「極值點」，確保內插函數有足夠的區間計算
-    if (FLAT.length > 0) {
-      const firstTs = FLAT[0].ts;
-      const lastTs = FLAT[FLAT.length-1].ts;
-      // 往前補 24 小時的點（借用第一個點的高度與類型）
-      FLAT.unshift({ts: new Date(firstTs.getTime() - 24*3600*1000), h: FLAT[0].h, type: FLAT[0].type});
-      // 往後補 24 小時的點
-      FLAT.push({ts: new Date(lastTs.getTime() + 24*3600*1000), h: FLAT[FLAT.length-1].h, type: FLAT[FLAT.length-1].type});
+        // 補齊邊界以利 24 小時內插曲線
+        if (FLAT.length > 0) {
+            const firstTs = FLAT[0].ts;
+            const lastTs = FLAT[FLAT.length-1].ts;
+            FLAT.unshift({ts: new Date(firstTs.getTime() - 24*3600*1000), h: FLAT[0].h, type: FLAT[0].type});
+            FLAT.push({ts: new Date(lastTs.getTime() + 24*3600*1000), h: FLAT[FLAT.length-1].h, type: FLAT[FLAT.length-1].type});
+        }
+        return true;
+    } catch (err) {
+        console.error("API 擷取失敗：", err);
+        return false;
     }
-
-    return true;
-  } catch (err) {
-    console.error("資料解析失敗：", err);
-    return false;
-  }
 }
 
 function interpAt(t){
-  if (FLAT.length === 0) return null;
-  
-  for (let i=0;i<FLAT.length-1;i++){
-    if (FLAT[i].ts<=t && FLAT[i+1].ts>=t){
-      const frac = (t-FLAT[i].ts)/(FLAT[i+1].ts-FLAT[i].ts);
-      return FLAT[i].h + (FLAT[i+1].h-FLAT[i].h)*(1-Math.cos(Math.PI*frac))/2;
+    if (FLAT.length === 0) return null;
+    for (let i=0; i<FLAT.length-1; i++){
+        if (FLAT[i].ts <= t && FLAT[i+1].ts >= t){
+            const frac = (t - FLAT[i].ts) / (FLAT[i+1].ts - FLAT[i].ts);
+            return FLAT[i].h + (FLAT[i+1].h - FLAT[i].h) * (1 - Math.cos(Math.PI * frac)) / 2;
+        }
     }
-  }
-  return null;
+    return null;
 }
 
-/* ---------- 日出日落推算 ---------- */
 function getSunTimes(dateStr){
-  const d1 = new Date("2026-07-19").getTime();
-  const d2 = new Date("2026-08-18").getTime();
-  const target = new Date(dateStr.replace(/-/g, "/")).getTime();
-  const ratio = Math.max(0, Math.min(1, (target - d1) / (d2 - d1)));
-
-  const srStart = 5*60 + 20; 
-  const ssStart = 18*60 + 45; 
-  const srEnd = 5*60 + 33;   
-  const ssEnd = 18*60 + 28;  
-
-  const sunrise = Math.round(srStart + ratio * (srEnd - srStart));
-  const sunset = Math.round(ssStart + ratio * (ssEnd - ssStart));
-  return { sunrise, sunset };
+    const d1 = new Date("2026-07-19").getTime();
+    const d2 = new Date("2026-08-18").getTime();
+    const target = new Date(dateStr.replace(/-/g, "/")).getTime();
+    const ratio = Math.max(0, Math.min(1, (target - d1) / (d2 - d1)));
+    const sunrise = Math.round(5*60 + 20 + ratio * 13);
+    const sunset = Math.round(18*60 + 45 - ratio * 17);
+    return { sunrise, sunset };
 }
 
-const FISH_RISE_START = 0.3; 
-const FISH_RISE_END = 0.8;   
-const FISH_FALL_START = 0.8; 
-const FISH_FALL_END = 0.7;   
+const FISH_RISE_START = 0.3, FISH_RISE_END = 0.8;
+const FISH_FALL_START = 0.8, FISH_FALL_END = 0.7;
 
 function getFracTime(startTs, endTs, targetFrac, isFalling) {
-  const duration = endTs - startTs;
-  let f;
-  if (isFalling) {
-    f = Math.acos(2 * targetFrac - 1) / Math.PI;
-  } else {
-    f = Math.acos(1 - 2 * targetFrac) / Math.PI;
-  }
-  return new Date(startTs.getTime() + f * duration);
+    const duration = endTs - startTs;
+    let f = isFalling ? Math.acos(2 * targetFrac - 1) / Math.PI : Math.acos(1 - 2 * targetFrac) / Math.PI;
+    return new Date(startTs.getTime() + f * duration);
 }
 
 function fishWindowsForHighTide(ts){
-  const idx = FLAT.findIndex(e=>e.ts && e.ts.getTime()===ts.getTime());
-  const highEvt = idx>=0 ? FLAT[idx] : {ts};
-  const prevEvt = idx>0 ? FLAT[idx-1] : null;
-  const nextEvt = idx>=0 ? FLAT[idx+1] : null;
-  
-  const windows = [];
+    const idx = FLAT.findIndex(e => e.ts && e.ts.getTime() === ts.getTime());
+    const highEvt = idx >= 0 ? FLAT[idx] : {ts};
+    const prevEvt = idx > 0 ? FLAT[idx-1] : null;
+    const nextEvt = idx >= 0 ? FLAT[idx+1] : null;
+    const windows = [];
 
-  if (prevEvt && prevEvt.type==="乾潮" && prevEvt.h < highEvt.h){
-    const t1 = getFracTime(prevEvt.ts, highEvt.ts, FISH_RISE_START, false);
-    const t2 = getFracTime(prevEvt.ts, highEvt.ts, FISH_RISE_END, false);
-    windows.push({t1, t2, phase: "漲水"});
-  }
-  
-  if (nextEvt && nextEvt.type==="乾潮" && nextEvt.h < highEvt.h){
-    const t1 = getFracTime(highEvt.ts, nextEvt.ts, FISH_FALL_START, true);
-    const t2 = getFracTime(highEvt.ts, nextEvt.ts, FISH_FALL_END, true);
-    windows.push({t1, t2, phase: "退水"});
-  }
-  
-  return windows;
+    if (prevEvt && prevEvt.type === "乾潮" && prevEvt.h < highEvt.h){
+        windows.push({t1: getFracTime(prevEvt.ts, highEvt.ts, FISH_RISE_START, false), t2: getFracTime(prevEvt.ts, highEvt.ts, FISH_RISE_END, false), phase: "漲水"});
+    }
+    if (nextEvt && nextEvt.type === "乾潮" && nextEvt.h < highEvt.h){
+        windows.push({t1: getFracTime(highEvt.ts, nextEvt.ts, FISH_FALL_START, true), t2: getFracTime(highEvt.ts, nextEvt.ts, FISH_FALL_END, true), phase: "退水"});
+    }
+    return windows;
 }
 
 function recoForDay(dayObj){
-  const [date, , , , events] = dayObj;
-  const recos = [];
+    const [date, , , , events] = dayObj;
+    const recos = [];
 
-  events.forEach(([type,time,h])=>{
-    if (type==="乾潮"){
-      const m = timeToMin(time);
-      
-      // 🌟 新增牽罟判斷機制：乾潮時間落在 14:00 (840分) ~ 18:00 (1080分) 之間
-      if (m >= 840 && m <= 1080) {
-        const s = Math.max(0, m - 120); // 乾潮前兩小時為開始
-        const e = m;                    // 乾潮當下為結束
-        recos.push({kind:"koo", start:s, end:e, label:`牽罟建議 ${minToLabel(s)}–${minToLabel(e)}`,
-          note:`乾潮前兩小時為最佳時機，銜接乾潮 ${time}（${h}cm）`});
-      }
-    } else if (type==="滿潮") {
-      const ts = toTs(date, time);
-      const dayStart = toTs(date,"00:00");
-      const windows = fishWindowsForHighTide(ts);
-      
-      windows.forEach(w => {
-        const s = Math.max(0, Math.min(1439, Math.round((w.t1-dayStart)/60000)));
-        const e = Math.max(0, Math.min(1439, Math.round((w.t2-dayStart)/60000)));
-        
-        if (e <= s) return; 
-
-        if (w.phase === "漲水") {
-          recos.push({kind:"fish", start:s, end:e, label:`垂釣建議（漲水） ${minToLabel(s)}–${minToLabel(e)}`,
-            note:`銜接滿潮 ${time}（${h}cm）：漲潮期間水流活絡，魚群隨流靠岸`});
-        } else {
-          recos.push({kind:"fish", start:s, end:e, label:`垂釣建議（退水） ${minToLabel(s)}–${minToLabel(e)}`,
-            note:`銜接滿潮 ${time}（${h}cm）：剛過平潮，開始有水流帶動`});
+    events.forEach(([type, time, h]) => {
+        if (type === "乾潮") {
+            const m = timeToMin(time);
+            // 牽罟標準：乾潮落在 14:00 (840分) ~ 18:00 (1080分) 之間
+            if (m >= 840 && m <= 1080) {
+                const s = Math.max(0, m - 120);
+                const e = m;
+                recos.push({kind:"koo", start:s, end:e, label:`牽罟建議 ${minToLabel(s)}–${minToLabel(e)}`, note:`乾潮前兩小時最佳時機，銜接乾潮 ${time}（${h}cm）`});
+            }
+        } else if (type === "滿潮") {
+            const ts = toTs(date, time);
+            const dayStart = toTs(date, "00:00");
+            fishWindowsForHighTide(ts).forEach(w => {
+                const s = Math.max(0, Math.min(1439, Math.round((w.t1-dayStart)/60000)));
+                const e = Math.max(0, Math.min(1439, Math.round((w.t2-dayStart)/60000)));
+                if (e > s) {
+                    recos.push({kind:"fish", start:s, end:e, label:`垂釣建議（${w.phase}） ${minToLabel(s)}–${minToLabel(e)}`, note:`銜接滿潮 ${time}（${h}cm）：流水活絡，魚群靠岸`});
+                }
+            });
         }
-      });
-    }
-  });
-  
-  return recos.sort((a,b) => a.start - b.start);
+    });
+    return recos.sort((a,b) => a.start - b.start);
 }
 
-/* ---------- 畫日期選擇列 ---------- */
+/* =========================================================
+   3. UI 渲染與互動
+   ========================================================= */
 function renderDayPicker() {
-  const dayPicker = document.getElementById("dayPicker");
-  dayPicker.innerHTML = "";
+    const dayPicker = document.getElementById("dayPicker");
+    dayPicker.innerHTML = "";
+    const d = new Date();
+    const todayStr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    selectedIdx = DAYS.findIndex(d => d[0] === todayStr);
+    if (selectedIdx === -1) selectedIdx = 0;
 
-  const d = new Date();
-  const todayStr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-
-  selectedIdx = DAYS.findIndex(d=>d[0]===todayStr);
-  if (selectedIdx === -1) selectedIdx = 0;
-
-  DAYS.forEach((d,i)=>{
-    const [date,wd,lunar,range] = d;
-    const btn = document.createElement("button");
-    btn.className = "day-btn" + (date===todayStr ? " today":"") + (i===selectedIdx ? " active":"");
-    btn.innerHTML = `<span class="dot dot-${range}"></span>${date.slice(5).replace('-','/')} (${wd})`;
-    btn.addEventListener("click", ()=>{ selectedIdx = i; render(); });
-    btn.dataset.idx = i;
-    dayPicker.appendChild(btn);
-  });
+    DAYS.forEach((d, i) => {
+        const [date, wd, lunar, range] = d;
+        const btn = document.createElement("button");
+        btn.className = "day-btn" + (date === todayStr ? " today" : "") + (i === selectedIdx ? " active" : "");
+        btn.innerHTML = `<span class="dot dot-${range}"></span>${date.slice(5).replace('-','/')} (${wd})`;
+        btn.addEventListener("click", () => { selectedIdx = i; render(); });
+        dayPicker.appendChild(btn);
+    });
 }
 
-function selectDay(idx) {
-  selectedIdx = idx;
-  render();
-}
+function selectDay(idx) { selectedIdx = idx; render(); }
 
 function initGoldenSidebar() {
-  const listContainer = document.getElementById("goldenList");
-  let html = "";
-  
-  DAYS.forEach((dayObj, idx) => {
-    const [date, wd] = dayObj;
-    const { sunrise, sunset } = getSunTimes(date);
-    const recos = recoForDay(dayObj);
-    
-    const dawnS = sunrise - 60, dawnE = sunrise + 60;
-    const duskS = sunset - 120, duskE = sunset;
-    
-    let overlapNotes = [];
-    
-    recos.forEach(r => {
-      if (r.kind === "fish") {
-        if (r.start < dawnE && r.end > dawnS) {
-          const overlapS = Math.max(r.start, dawnS);
-          const overlapE = Math.min(r.end, dawnE);
-          const overlapDuration = overlapE - overlapS;
-          
-          if (overlapDuration >= 60) {
-            overlapNotes.push(`晨間 ${minToLabel(overlapS)}–${minToLabel(overlapE)} <span class="g-duration">(${overlapDuration}分)</span>`);
-          }
+    const listContainer = document.getElementById("goldenList");
+    let html = "";
+    DAYS.forEach((dayObj, idx) => {
+        const [date, wd] = dayObj;
+        const { sunrise, sunset } = getSunTimes(date);
+        const recos = recoForDay(dayObj);
+        const dawnS = sunrise - 60, dawnE = sunrise + 60;
+        const duskS = sunset - 120, duskE = sunset;
+        let overlapNotes = [];
+
+        recos.forEach(r => {
+            if (r.kind === "fish") {
+                if (r.start < dawnE && r.end > dawnS) {
+                    const os = Math.max(r.start, dawnS), oe = Math.min(r.end, dawnE);
+                    if (oe - os >= 60) overlapNotes.push(`晨間 ${minToLabel(os)}–${minToLabel(oe)} <span class="g-duration">(${oe-os}分)</span>`);
+                }
+                if (r.start < duskE && r.end > duskS) {
+                    const os = Math.max(r.start, duskS), oe = Math.min(r.end, duskE);
+                    if (oe - os >= 60) overlapNotes.push(`傍晚 ${minToLabel(os)}–${minToLabel(oe)} <span class="g-duration">(${oe-os}分)</span>`);
+                }
+            }
+        });
+        if (overlapNotes.length > 0) {
+            html += `<div class="golden-item" onclick="selectDay(${idx})">
+                        <div class="g-date">${date.slice(5).replace('-','/')} (${wd})</div>
+                        <div class="g-time">${overlapNotes.join("<br>")}</div>
+                     </div>`;
         }
-        
-        if (r.start < duskE && r.end > duskS) {
-          const overlapS = Math.max(r.start, duskS);
-          const overlapE = Math.min(r.end, duskE);
-          const overlapDuration = overlapE - overlapS;
-          
-          if (overlapDuration >= 60) {
-            overlapNotes.push(`傍晚 ${minToLabel(overlapS)}–${minToLabel(overlapE)} <span class="g-duration">(${overlapDuration}分)</span>`);
-          }
-        }
-      }
     });
-
-    if (overlapNotes.length > 0) {
-      const displayDate = date.slice(5).replace('-','/');
-      html += `
-        <div class="golden-item" onclick="selectDay(${idx})" title="點擊查看當日潮汐">
-          <div class="g-date">${displayDate} (${wd})</div>
-          <div class="g-time">${overlapNotes.join("<br>")}</div>
-        </div>
-      `;
-    }
-  });
-
-  if (html === "") {
-    listContainer.innerHTML = `<div style="font-size:13px; color:#888;">目前資料區間內無完美重疊超過一小時的黃金釣魚日。</div>`;
-  } else {
-    listContainer.innerHTML = html;
-  }
+    listContainer.innerHTML = html || `<div style="font-size:0.85rem; color:rgba(244,234,225,0.5);">近月份無長時間重疊之黃金日。</div>`;
 }
 
-/* ---------- 畫潮汐曲線 ---------- */
 const svg = document.getElementById("tideChart");
 const W = 800, H = 300, PAD_L = 46, PAD_R = 14, PAD_T = 20, PAD_B = 34;
 
 function render(){
-  const dayPicker = document.getElementById("dayPicker");
-  [...dayPicker.children].forEach((b,i)=>b.classList.toggle("active", i===selectedIdx));
-  const activeBtn = dayPicker.children[selectedIdx];
-  if (activeBtn) activeBtn.scrollIntoView({inline:"center", block:"nearest", behavior:"smooth"});
+    const dayPicker = document.getElementById("dayPicker");
+    [...dayPicker.children].forEach((b,i) => b.classList.toggle("active", i === selectedIdx));
+    const day = DAYS[selectedIdx];
+    if (!day) return;
 
-  const day = DAYS[selectedIdx];
-  if (!day) return;
+    const [date, wd, lunar, range, events] = day;
+    const { sunrise, sunset } = getSunTimes(date);
+    const d = new Date();
+    const todayStr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 
-  const [date,wd,lunar,range,events] = day;
+    document.getElementById("chartTitle").textContent = (date === todayStr ? "今日" : "") + "潮汐曲線";
+    document.getElementById("rangeBadge").textContent = "潮差：" + range;
+    document.getElementById("rangeBadge").className = "badge " + range;
+    document.getElementById("dateCaption").textContent = `${date.replace(/-/g,'/')}（${wd}） · 農曆 ${lunar} · 站點：後龍鎮 · 日出 ${minToLabel(sunrise)} / 日落 ${minToLabel(sunset)}`;
 
-  const { sunrise, sunset } = getSunTimes(date);
-  
-  const d = new Date();
-  const todayStr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-
-  document.getElementById("chartTitle").textContent = (date===todayStr?"今日":"") + "潮汐曲線";
-  document.getElementById("rangeBadge").textContent = "潮差：" + range;
-  document.getElementById("rangeBadge").className = "badge " + range;
-  document.getElementById("dateCaption").textContent =
-    `${date.replace(/-/g,'/')}（${wd}） · 農曆 ${lunar} · 站點：後龍鎮 · 日出 ${minToLabel(sunrise)} / 日落 ${minToLabel(sunset)}`;
-
-  const dayStart = toTs(date,"00:00");
-  const N = 240;
-  const pts = [];
-  for (let i=0;i<=N;i++){
-    const t = new Date(dayStart.getTime() + i*6*60000);
-    pts.push(interpAt(t));
-  }
-
-  const allHeights = FLAT.map(e => e.h);
-  const globalMinH = FLAT.length > 0 ? Math.min(...allHeights) : -200;
-  const globalMaxH = FLAT.length > 0 ? Math.max(...allHeights) : 300;
-  const yPad = (globalMaxH - globalMinH) * 0.15 || 50;
-  const yLo = globalMinH - yPad;
-  const yHi = globalMaxH + yPad;
-
-  const xOf = i => PAD_L + (i/N) * (W-PAD_L-PAD_R);
-  const yOf = h => PAD_T + (1 - (h-yLo)/(yHi-yLo)) * (H-PAD_T-PAD_B);
-
-  // 🌟 關鍵修正：確保 SVG Path 在遇到 null 時不會斷線
-  let path = "";
-  let isFirstPoint = true;
-  pts.forEach((h,i)=>{ 
-    if (h !== null && !isNaN(h)) {
-      path += (isFirstPoint ? "M" : "L") + xOf(i).toFixed(1) + "," + yOf(h).toFixed(1) + " "; 
-      isFirstPoint = false;
+    const dayStart = toTs(date, "00:00");
+    const N = 240;
+    const pts = [];
+    for (let i=0; i<=N; i++){
+        pts.push(interpAt(new Date(dayStart.getTime() + i*6*60000)));
     }
-  });
 
-  const recos = recoForDay(day);
-  const bands = recos.map(r=>{
-    const x1 = xOf(r.start/1440*N), x2 = xOf(r.end/1440*N);
-    const cls = r.kind==="koo" ? "var(--rope-soft)" : "var(--coral-soft)";
-    const stroke = r.kind==="koo" ? "var(--rope)" : "var(--coral)";
-    return `<rect x="${x1.toFixed(1)}" y="${PAD_T}" width="${Math.max(2,(x2-x1)).toFixed(1)}" height="${H-PAD_T-PAD_B}" fill="${cls}" stroke="${stroke}" stroke-width="0.5"/>`;
-  }).join("");
+    const allHeights = FLAT.map(e => e.h);
+    const globalMinH = FLAT.length > 0 ? Math.min(...allHeights) : -200;
+    const globalMaxH = FLAT.length > 0 ? Math.max(...allHeights) : 300;
+    const yPad = (globalMaxH - globalMinH) * 0.15 || 50;
+    const yLo = globalMinH - yPad, yHi = globalMaxH + yPad;
 
-  let axis = "";
-  for (let hr=0; hr<=24; hr+=3){
-    const x = xOf(hr/24*N);
-    axis += `<line x1="${x}" y1="${PAD_T}" x2="${x}" y2="${H-PAD_B}" stroke="#EEE7D6" stroke-width="1"/>`;
-    axis += `<text x="${x}" y="${H-PAD_B+18}" font-size="11" fill="#7A8582" text-anchor="middle" font-family="sans-serif">${pad(hr)}:00</text>`;
-  }
-  
-  for (let h = Math.ceil(yLo/100)*100; h <= yHi; h += 100){
-    const y = yOf(h);
-    axis += `<line x1="${PAD_L}" y1="${y}" x2="${W-PAD_R}" y2="${y}" stroke="#E5DCC6" stroke-width="1" stroke-dasharray="4 4"/>`;
-    axis += `<text x="${PAD_L-8}" y="${y+4}" font-size="11" fill="#7A8582" text-anchor="end" font-family="sans-serif">${h}</text>`;
-  }
+    const xOf = i => PAD_L + (i/N) * (W-PAD_L-PAD_R);
+    const yOf = h => PAD_T + (1 - (h-yLo)/(yHi-yLo)) * (H-PAD_T-PAD_B);
 
-  let markers = "";
-  events.forEach(([type,time,h])=>{
-    const m = timeToMin(time);
-    const x = xOf(m/1440*N);
-    const y = yOf(h);
-    const color = type==="滿潮" ? "var(--tide-blue)" : "var(--seagrass)";
-    markers += `<circle cx="${x}" cy="${y}" r="4.5" fill="${color}" stroke="#fff" stroke-width="1.5"/>`;
-    const labelY = y < H*0.4 ? y+18 : y-12;
-    markers += `<text x="${x}" y="${labelY}" font-size="11.5" fill="${color}" text-anchor="middle" font-family="sans-serif" font-weight="700">${type} ${time}</text>`;
-    markers += `<text x="${x}" y="${labelY + 13}" font-size="10" fill="#8A948F" text-anchor="middle" font-family="sans-serif">${h}cm</text>`;
-  });
+    let path = "";
+    let isFirstPoint = true;
+    pts.forEach((h,i) => {
+        if (h !== null && !isNaN(h)) {
+            path += (isFirstPoint ? "M" : "L") + xOf(i).toFixed(1) + "," + yOf(h).toFixed(1) + " ";
+            isFirstPoint = false;
+        }
+    });
 
-  let nowLine = "";
-  const now = new Date();
-  if (date===todayStr){
-    const nowMin = now.getHours()*60+now.getMinutes();
-    const x = xOf(nowMin/1440*N);
-    nowLine = `<line x1="${x}" y1="${PAD_T-6}" x2="${x}" y2="${H-PAD_B}" stroke="var(--coral)" stroke-width="1.6" stroke-dasharray="4 3"/>
-               <text x="${x}" y="${PAD_T-9}" font-size="10.5" fill="var(--coral)" text-anchor="middle" font-family="sans-serif" font-weight="700">NOW</text>`;
-  }
+    const recos = recoForDay(day);
+    const bands = recos.map(r => {
+        const x1 = xOf(r.start/1440*N), x2 = xOf(r.end/1440*N);
+        const cls = r.kind === "koo" ? "rgba(156,107,52,0.25)" : "rgba(217,96,62,0.25)";
+        const stroke = r.kind === "koo" ? "#9C6B34" : "#D9603E";
+        return `<rect x="${x1.toFixed(1)}" y="${PAD_T}" width="${Math.max(2,(x2-x1)).toFixed(1)}" height="${H-PAD_T-PAD_B}" fill="${cls}" stroke="${stroke}" stroke-width="0.8"/>`;
+    }).join("");
 
-  svg.innerHTML = `
-    ${axis}
-    ${bands}
-    <path d="${path}" fill="none" stroke="#1C4956" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
-    <path d="${path}" fill="none" stroke="#1C4956" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="0.5 9" opacity="0.55"/>
-    ${markers}
-    ${nowLine}
-  `;
+    let axis = "";
+    for (let hr=0; hr<=24; hr+=3){
+        const x = xOf(hr/24*N);
+        axis += `<line x1="${x}" y1="${PAD_T}" x2="${x}" y2="${H-PAD_B}" stroke="rgba(244,234,225,0.08)" stroke-width="1"/>`;
+        axis += `<text x="${x}" y="${H-PAD_B+18}" font-size="11" fill="rgba(244,234,225,0.5)" text-anchor="middle">${pad(hr)}:00</text>`;
+    }
+    for (let h = Math.ceil(yLo/100)*100; h <= yHi; h += 100){
+        const y = yOf(h);
+        axis += `<line x1="${PAD_L}" y1="${y}" x2="${W-PAD_R}" y2="${y}" stroke="rgba(244,234,225,0.08)" stroke-width="1" stroke-dasharray="4 4"/>`;
+        axis += `<text x="${PAD_L-8}" y="${y+4}" font-size="11" fill="rgba(244,234,225,0.5)" text-anchor="end">${h}</text>`;
+    }
 
-  const recoList = document.getElementById("recoList");
-  recoList.innerHTML = recos.map(r=>`
-    <li>
-      <span class="reco-tag ${r.kind==='koo'?'tag-koo':'tag-fish'}">${r.kind==='koo'?'牽罟':'垂釣'}</span>
-      <span><strong>${r.label}</strong> — ${r.note}</span>
-    </li>
-  `).join("");
+    let markers = "";
+    events.forEach(([type, time, h]) => {
+        const m = timeToMin(time);
+        const x = xOf(m/1440*N), y = yOf(h);
+        const color = type === "滿潮" ? "#dfc79c" : "#4B6B4E";
+        markers += `<circle cx="${x}" cy="${y}" r="4.5" fill="${color}" stroke="#0a090b" stroke-width="1.5"/>`;
+        const labelY = y < H*0.4 ? y+18 : y-12;
+        markers += `<text x="${x}" y="${labelY}" font-size="11" fill="${color}" text-anchor="middle" font-weight="700">${type} ${time}</text>`;
+        markers += `<text x="${x}" y="${labelY + 13}" font-size="10" fill="rgba(244,234,225,0.5)" text-anchor="middle">${h}cm</text>`;
+    });
 
-  updateNowCard();
+    let nowLine = "";
+    if (date === todayStr){
+        const nowMin = d.getHours()*60 + d.getMinutes();
+        const x = xOf(nowMin/1440*N);
+        nowLine = `<line x1="${x}" y1="${PAD_T-6}" x2="${x}" y2="${H-PAD_B}" stroke="#D9603E" stroke-width="1.6" stroke-dasharray="4 3"/>
+                   <text x="${x}" y="${PAD_T-9}" font-size="10" fill="#D9603E" text-anchor="middle" font-weight="700">NOW</text>`;
+    }
+
+    svg.innerHTML = `${axis}${bands}<path d="${path}" fill="none" stroke="#dfc79c" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>${markers}${nowLine}`;
+
+    const recoList = document.getElementById("recoList");
+    recoList.innerHTML = recos.map(r => `
+        <li>
+            <span class="reco-tag ${r.kind === 'koo' ? 'tag-koo' : 'tag-fish'}">${r.kind === 'koo' ? '牽罟' : '垂釣'}</span>
+            <span><strong>${r.label}</strong> — ${r.note}</span>
+        </li>
+    `).join("");
+
+    updateNowCard();
 }
 
 function updateNowCard(){
-  const now = new Date();
-  const todayStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
-  const today = DAYS.find(d=>d[0]===todayStr);
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+    const today = DAYS.find(d => d[0] === todayStr);
 
-  const nowBig = document.getElementById("nowBig");
-  const nowSub = document.getElementById("nowSub");
-  const nowPill = document.getElementById("nowPill");
+    const nowBig = document.getElementById("nowBig");
+    const nowSub = document.getElementById("nowSub");
+    const nowPill = document.getElementById("nowPill");
 
-  if (!today){
-    nowBig.textContent = "即時潮位連線中";
-    nowSub.textContent = "當前日期不在 API 回傳之預報區間內，請點擊上方選單查看最新預報日期。";
-    nowPill.textContent = "查看預報";
-    nowPill.className = "now-pill pill-wait";
-    return;
-  }
-
-  const h = interpAt(now);
-  const hSoon = interpAt(new Date(now.getTime()+5*60000));
-  const trend = (hSoon !== null && h !== null && hSoon > h) ? "漲潮中" : "退潮中";
-  nowBig.textContent = h !== null ? `潮位約 ${Math.round(h)} cm · ${trend}` : `潮位讀取中 · ${trend}`;
-
-  const recos = recoForDay(today);
-  const nowMin = now.getHours()*60+now.getMinutes();
-  const active = recos.find(r=>nowMin>=r.start && nowMin<=r.end);
-
-  if (active){
-    nowSub.textContent = active.note;
-    nowPill.textContent = active.kind==="koo" ? "現在適合牽罟" : "現在適合垂釣";
-    nowPill.className = "now-pill " + (active.kind==="koo" ? "pill-koo":"pill-fish");
-  } else {
-    const upcoming = recos.filter(r=>r.start>nowMin).sort((a,b)=>a.start-b.start)[0];
-    if (upcoming){
-      const wait = upcoming.start - nowMin;
-      nowSub.textContent = `距離下一個${upcoming.kind==="koo"?"牽罟":"垂釣"}建議時段還有約 ${wait} 分鐘（${minToLabel(upcoming.start)} 開始）`;
-    } else {
-      nowSub.textContent = "今天的建議時段都已經過了，明天請早。";
+    if (!today){
+        nowBig.textContent = "即時潮位連線中";
+        nowSub.textContent = "請點擊選單檢視未來最新預報區間。";
+        nowPill.textContent = "查看預報";
+        nowPill.className = "now-pill pill-wait";
+        return;
     }
-    nowPill.textContent = "等待潮水";
-    nowPill.className = "now-pill pill-wait";
-  }
+
+    const h = interpAt(now);
+    const hSoon = interpAt(new Date(now.getTime() + 5*60000));
+    const trend = (hSoon !== null && h !== null && hSoon > h) ? "漲潮中" : "退潮中";
+    nowBig.textContent = h !== null ? `潮位約 ${Math.round(h)} cm · ${trend}` : `讀取中…`;
+
+    const recos = recoForDay(today);
+    const nowMin = now.getHours()*60 + now.getMinutes();
+    const active = recos.find(r => nowMin >= r.start && nowMin <= r.end);
+
+    if (active){
+        nowSub.textContent = active.note;
+        nowPill.textContent = active.kind === "koo" ? "現在適合牽罟" : "現在適合垂釣";
+        nowPill.className = "now-pill " + (active.kind === "koo" ? "pill-koo" : "pill-fish");
+    } else {
+        const upcoming = recos.filter(r => r.start > nowMin).sort((a,b) => a.start - b.start)[0];
+        nowSub.textContent = upcoming ? `距離下一個${upcoming.kind === "koo" ? "牽罟" : "垂釣"}建議時間約 ${upcoming.start - nowMin} 分鐘` : "今日建議時段已過。";
+        nowPill.textContent = "等待潮水";
+        nowPill.className = "now-pill pill-wait";
+    }
 }
 
-/* ---------- 應用程式初始化入口 ---------- */
-async function initApp() {
-  const success = await fetchAndParseTideData();
+/* 滾動目錄高亮 */
+window.addEventListener('scroll', () => {
+    const sections = document.querySelectorAll('.section');
+    const navLinks = document.querySelectorAll('.index-nav a');
+    let current = '';
 
-  if (success && DAYS.length > 0) {
-    renderDayPicker();
-    initGoldenSidebar();
-    render();
-  } else {
-    document.getElementById("nowBig").textContent = "資料載入失敗";
-    document.getElementById("nowSub").textContent = "無法解析氣象署 API 資料，請檢查 API 參數或網路狀態。";
-  }
+    sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        if (pageYOffset >= sectionTop - window.innerHeight / 3) {
+            current = section.getAttribute('id');
+        }
+    });
+
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${current}`) {
+            link.classList.add('active');
+        }
+    });
+});
+
+async function initApp() {
+    const success = await fetchAndParseTideData();
+    if (success && DAYS.length > 0) {
+        renderDayPicker();
+        initGoldenSidebar();
+        render();
+    } else {
+        document.getElementById("nowBig").textContent = "連線失敗";
+        document.getElementById("nowSub").textContent = "無法載入氣象署 API 資料。";
+    }
 }
 
 initApp();
